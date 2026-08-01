@@ -1,5 +1,7 @@
 # TWSE-KG
 
+[![Verify Paper Anchors](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml/badge.svg)](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml)
+
 A Proprietary Database and Knowledge Graph for Financial News Analysis and Scoring.
 
 ## Overview
@@ -16,7 +18,11 @@ The system uses a two-tier sentiment scoring architecture:
 ```
 TWSE-KG/
 ├── README.md
+├── LICENSE                     # Proprietary license
+├── requirements.txt            # Python dependencies
 ├── run_experiments.py          # Reproduction script for all paper tables
+├── .github/workflows/
+│   └── verify.yml              # CI: auto-verify against paper anchors
 ├── data/
 │   └── Sentiment_score_all.xlsx  # All experimental data (7 sheets)
 └── sim/                        # Ablation kit (shuffled-edge control)
@@ -31,6 +37,9 @@ TWSE-KG/
 ## Quick Start
 
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
 # Run all experiments
 python run_experiments.py
 
@@ -39,6 +48,9 @@ python run_experiments.py --table 3
 
 # Verify against paper anchors
 python run_experiments.py --verify
+
+# Run ablation kit selftest
+cd sim && python shuffle_control.py --selftest
 ```
 
 ## Data Description (Sentiment_score_all.xlsx)
