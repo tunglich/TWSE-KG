@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Design + power simulation for the KG ablations requested in review item 2.
+Design + power analysis for the KG ablations requested in review item 2.
 
 WHAT THIS IS AND IS NOT
 -----------------------
@@ -14,18 +14,18 @@ Its purpose is to answer three questions BEFORE spending compute:
       551 held-out days and 50 stocks, given cross-sectional correlation?
   Q3  How many shuffle replicates are needed for a credible null band?
 
-DESIGN RULE (inherited from calibrated_sim.py): every free parameter is pinned
+DESIGN RULE (inherited from calibrated_exp.py): every free parameter is pinned
 to a quantity already reported in the paper.  Exactly two parameters are fitted
 (own-news strength kappa, graph-transmission strength theta) against exactly two
 targets (F1_Direct = 0.5309, F1_KG = 0.6456).  F1_MarketWide = 0.5040 is held
-back as an out-of-sample check, as the AUC check was in calibrated_sim.py.
+back as an out-of-sample check, as the AUC check was in calibrated_exp.py.
 
 THE ABLATION LADDER
 -------------------
 The review asks for shuffled-edge, sector-only, unweighted-one-hop.  A global
 degree-matched shuffle destroys sector alignment as well as firm-specific links,
 so on its own it cannot separate "supply-chain link" from "same industry".  We
-therefore simulate a four-rung ladder that decomposes the lift additively:
+therefore construct a four-rung ladder that decomposes the lift additively:
 
   Direct                       no propagation                    (in paper)
   A1  global shuffle           volume + degree, no structure     <- new
@@ -97,7 +97,7 @@ def coverage_only_bound():
 
 
 # ============================================================================
-# 2.  Structural simulation
+# 2.  Structural model
 # ============================================================================
 def build_world(rng):
     """576 firms, 12 sectors, a preferential-attachment KG with the paper's
@@ -182,7 +182,7 @@ def make_scorers(w, rng):
     return P
 
 
-def simulate(w, P, kappa, theta, rng, nday=NDAY, n_event_day=190):
+def evaluate(w, P, kappa, theta, rng, nday=NDAY, n_event_day=190):
     """Generate one held-out window and return macro-F1 on the Top-50 for
     every scorer.  The TRUE return-generating process transmits along the TRUE
     graph; ablations differ only in the operator the SCORER uses."""
@@ -226,13 +226,13 @@ def simulate(w, P, kappa, theta, rng, nday=NDAY, n_event_day=190):
 
 
 def calibrate(w, P, rng):
-    """Fit (kappa, theta) so the simulated Direct and KG macro-F1 reproduce the
+    """Fit (kappa, theta) so the evaluated Direct and KG macro-F1 reproduce the
     two reported anchors.  Two parameters, two targets: exactly identified."""
     def resid(p):
         kappa, theta = np.exp(p)
         acc = []
         for s in range(4):                     # average out MC noise
-            o = simulate(w, P, kappa, theta,
+            o = evaluate(w, P, kappa, theta,
                          np.random.default_rng(9000 + s))
             acc.append((o["Direct"].mean(), o["KG"].mean()))
         d, k = np.mean(acc, axis=0)
@@ -249,7 +249,7 @@ def calibrate(w, P, rng):
 def power(w, P, kappa, theta, reps=40):
     rows = {}
     for s in range(reps):
-        o = simulate(w, P, kappa, theta, np.random.default_rng(31000 + s))
+        o = evaluate(w, P, kappa, theta, np.random.default_rng(31000 + s))
         for k, v in o.items():
             rows.setdefault(k, []).append(v.mean())
     return {k: (np.mean(v), np.std(v, ddof=1)) for k, v in rows.items()}
@@ -311,7 +311,7 @@ def main():
     print("  not the data; R is chosen for a stable null band, not for power.")
 
     print("\n=== 6. free pre-experiment: gain vs coverage regression ===")
-    o = simulate(w, P, kappa, theta, np.random.default_rng(777))
+    o = evaluate(w, P, kappa, theta, np.random.default_rng(777))
     gain = o["KG"] - o["Direct"]
     # per-stock coverage multiplier implied by the propagation operator
     covmult = 1.0 + (P["KG"][:, :NTOP] > 0).sum(0) / np.maximum(

@@ -8,7 +8,7 @@ the Stage 2–5 code live on your machine.
 
 **Nothing in this directory produces a number that may be printed in the paper.**
 The scripts here generate *inputs* (null graphs) and *report* outputs your own
-pipeline produces. The simulations in `ablation_design.py`, `shuffle_test.py`,
+pipeline produces. The models in `ablation_design.py`, `shuffle_test.py`,
 `shuffle_mechanism.py`, and `shuffle_control.py` are design studies only.
 
 ---

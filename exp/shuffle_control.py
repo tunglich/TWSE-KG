@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Full simulation of the shuffled-edge CONTROL exactly as the paper pre-registers
+Full evaluation of the shuffled-edge CONTROL exactly as the paper pre-registers
 it, in a world calibrated to Taiwan's news concentration.
 
 WHY THIS RUN EXISTS
@@ -25,7 +25,7 @@ WHAT IT PRODUCES
      minutes) to the predicted KG - A1 separation.  That converts the three
      coarse verdict bands into a quantitative forecast.
 
-DESIGN SIMULATION ONLY.  No number here may be reported as a result.  Its role
+DESIGN STUDY ONLY.  No number here may be reported as a result.  Its role
 is to decide whether to run the real control and how to frame it.
 """
 import numpy as np
@@ -178,7 +178,7 @@ def main():
               f"{kk-aa.mean():+8.4f} {100*(aa.mean()-dd)/(kk-dd):8.1f}% "
               f"{z:11.1f}{mark}")
 
-    print("\nDESIGN SIMULATION ONLY -- no number here is an experimental result.")
+    print("\nDESIGN STUDY ONLY -- no number here is an experimental result.")
 
 
 if __name__ == "__main__":

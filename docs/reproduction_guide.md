@@ -45,7 +45,7 @@ The dependency list is minimal:
 | Package | Purpose |
 |---|---|
 | `openpyxl` | Read/write the Excel data workbook |
-| `numpy` | Numerical computation (shuffle simulation, correlation) |
+| `numpy` | Numerical computation (shuffle analysis, correlation) |
 | `scipy` | Optimization (lognormal calibration in `shuffle_control.py`) |
 | `pandas` | Tabular data handling |
 | `matplotlib` | Plotting in ablation kit scripts |
@@ -74,17 +74,17 @@ TWSE-KG/
 ├── scripts/
 │   ├── export_xlsx.py              # Regenerate Sentiment_score_all.xlsx
 │   └── run_ablation_kit.py         # Run ablation kit selftests
-├── sim/                            # Ablation kit (shuffled-edge control)
+├── exp/                            # Ablation kit (shuffled-edge control)
 │   ├── ABLATION_SPEC.md            # Executable specification
 │   ├── RUNBOOK_SHUFFLED_EDGE.md    # Step-by-step ablation runbook
 │   ├── make_null_graphs.py         # Generate null graphs (degree-matched shuffles)
 │   ├── precheck_shuffle.py         # Cheap pre-check (minutes, no classifier)
-│   ├── shuffle_control.py          # Calibrated simulation of the control
-│   ├── ablation_design.py          # Design + power simulation
+│   ├── shuffle_control.py          # Calibrated evaluation of the control
+│   ├── ablation_design.py          # Design + power analysis
 │   ├── shuffle_test.py             # Shuffle mechanism study
 │   ├── shuffle_mechanism.py        # Permutation-correlation study
 │   ├── collect_ablation.py         # Assemble raw F1 → reporting table + verdict
-│   └── calibrated_sim.py           # 50-stock simulation calibrated to Tables 3 & 4
+│   └── calibrated_exp.py           # 50-stock model calibrated to Tables 3 & 4
 ├── data/
 │   └── Sentiment_score_all.xlsx    # All experimental data (7 sheets)
 ├── docs/
@@ -129,7 +129,7 @@ The smoke test checks six areas in sequence:
 3. **Coverage-only bound** — The sqrt(n) upper bound on F1 from pure coverage expansion is below the reported KG F1, leaving a positive unexplained gap.
 4. **Data file integrity** — `Sentiment_score_all.xlsx` exists and contains all 7 required sheets.
 5. **Stage script verification** — Each of the five stage scripts (`stage1` through `stage5`) runs its `verify()` function and passes all assertions.
-6. **Ablation kit presence** — Required scripts (`shuffle_control.py`, `ablation_design.py`, `collect_ablation.py`) exist in `sim/`.
+6. **Ablation kit presence** — Required scripts (`shuffle_control.py`, `ablation_design.py`, `collect_ablation.py`) exist in `exp/`.
 
 A successful run prints `SMOKE TEST PASSED — all checks green` and exits with code 0.
 
@@ -207,7 +207,7 @@ A successful run prints `All verifications passed ✓`.
 
 ## 8. Ablation Kit — Shuffled-Edge Control
 
-The ablation kit lives in `sim/` and implements the degree-matched
+The ablation kit lives in `exp/` and implements the degree-matched
 shuffled-edge control described in §5 of the paper. The protocol has four
 phases: pre-check, null graph generation, pipeline execution (on your own
 infrastructure), and result collection.
@@ -238,7 +238,7 @@ No LLM calls, no classifier, no re-labelling. It forecasts the full
 experiment's outcome at a fraction of the cost.
 
 ```bash
-cd sim
+cd exp
 
 # Verify the code on synthetic data (~9 seconds)
 python3 precheck_shuffle.py --selftest
@@ -277,7 +277,7 @@ statistic is non-monotone, an inverted U):
 ### 8.3 Phase 1 — Generate Null Graphs (Seconds)
 
 ```bash
-cd sim
+cd exp
 
 # Verify degree preservation on synthetic data
 python3 make_null_graphs.py --selftest
@@ -337,7 +337,7 @@ Assemble a single `results.csv` with columns `rung,rep,f1` (`rep = 0` for
 deterministic rungs), then:
 
 ```bash
-cd sim
+cd exp
 
 # Verify the arithmetic on synthetic data
 python3 collect_ablation.py --selftest
@@ -376,12 +376,12 @@ make ablation
 ```
 
 This invokes `--selftest` on `shuffle_control.py`, `ablation_design.py`,
-and `collect_ablation.py`, verifying the simulation and collection
+and `collect_ablation.py`, verifying the analysis and collection
 arithmetic on synthetic data.
 
-### 8.8 Design Simulations (Optional)
+### 8.8 Design Studies (Optional)
 
-Two calibrated simulations provide design insight before running the real
+Two calibrated models provide design insight before running the real
 experiment:
 
 | Script | Purpose |
@@ -389,7 +389,7 @@ experiment:
 | `ablation_design.py` | Answers Q1–Q3: predicted F1 for each rung under structural vs. coverage hypotheses; whether the predictions are distinguishable with 551 days and 50 stocks; how many shuffle replicates are needed |
 | `shuffle_control.py` | Calibrates the world to Table 4 (news arrival is capitalisation-weighted, pinned by the reported Top-50 share of pre-propagation records = 46.67%); produces the reporting table, decomposition, and a lookup table mapping pre-check correlation to predicted KG − A1 separation |
 
-**These are design simulations only.** No number produced by these scripts
+**These are design studies only.** No number produced by these scripts
 may be reported in the paper as an experimental result.
 
 ---
@@ -428,8 +428,8 @@ steps:
   - run: pip install -r requirements.txt
   - run: python run_experiments.py           # Run all experiments
   - run: python run_experiments.py --verify  # Verify against paper anchors
-  - run: cd sim && python shuffle_control.py --selftest
-  - run: cd sim && python ablation_design.py --selftest
+  - run: cd exp && python shuffle_control.py --selftest
+  - run: cd exp && python ablation_design.py --selftest
 ```
 
 A green badge on the repository README confirms all anchors pass in CI.
@@ -480,7 +480,7 @@ python src/stage3_ablation.py --verify
 Run the failing script's selftest directly for details:
 
 ```bash
-cd sim
+cd exp
 python shuffle_control.py --selftest
 python ablation_design.py --selftest
 python collect_ablation.py --selftest

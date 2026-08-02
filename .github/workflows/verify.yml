@@ -37,6 +37,6 @@ jobs:
 
       - name: Run ablation kit selftest
         run: |
-          cd sim
+          cd exp
           python shuffle_control.py --selftest
           python ablation_design.py --selftest

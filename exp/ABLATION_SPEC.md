@@ -2,7 +2,7 @@
 
 Prepared in response to review item 2 ("missing shuffled-edge / sector baseline",
 the reviewer's largest single gap). This document is the protocol to run on the
-real corpus. The accompanying `ablation_design.py` is a **design simulation
+real corpus. The accompanying `ablation_design.py` is a **design study
 only** — none of its numbers may appear in the paper as a result.
 
 ## 0. Why this experiment is cheap
@@ -61,7 +61,7 @@ F1(KG) - F1(A4)      = value of exposure weights + second hop
 **Null band:** run `R` independent shuffles; the null distribution is the spread
 of `F1(A1)` across replicates. The held-out window is fixed, so replicates
 randomise the *shuffle*, not the data — `R` is chosen for a stable band, not for
-power. **R = 10** gives a half-width of roughly 0.003 F1 in simulation; R = 20
+power. **R = 10** gives a half-width of roughly 0.003 F1 in the model; R = 20
 if the run is cheap. Report the band, not a p-value from an i.i.d. assumption
 that does not hold cross-sectionally.
 

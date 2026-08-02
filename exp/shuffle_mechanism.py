@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Addendum to shuffle_test.py: WHY does a degree-matched random graph already
-capture ~2/3 of the simulated lift, and what does that imply for the real run?
+capture ~2/3 of the observed lift, and what does that imply for the real run?
 
 The sweep in shuffle_test.py section 4 falsified my first explanation: the A1
 share is flat (~66-68%) across market-factor loadings from 0.15 to 0.95, so the
@@ -17,7 +17,7 @@ Two tests:
   B  vary hub concentration (the capitalisation dispersion and the preferential-
      attachment exponent) and see whether the A1 share tracks it
 
-DESIGN SIMULATION ONLY.  No number here may be reported as a result.
+DESIGN STUDY ONLY.  No number here may be reported as a result.
 """
 import numpy as np
 from scipy import optimize
@@ -86,13 +86,13 @@ def run(sigma_cap, pa_exp, homoph, label, R=8, verbose=False):
 
 
 def main():
-    print("=== A/B. hub concentration vs the A1 share (design simulation) ===")
+    print("=== A/B. hub concentration vs the A1 share (design study) ===")
     print("  HH = normalised Herfindahl (1 = uniform).  corr = mean per-stock")
     print("  correlation between the TRUE transmitted signal and the signal a")
     print("  degree-matched RANDOM graph produces on the same news stream.\n")
 
     rows = []
-    rows.append(run(1.1, 0.5, 3.0, "baseline (as in paper sim)"))
+    rows.append(run(1.1, 0.5, 3.0, "baseline (as in paper model)"))
     rows.append(run(0.4, 0.5, 3.0, "flat caps  sigma=0.4"))
     rows.append(run(1.8, 0.5, 3.0, "steep caps sigma=1.8"))
     rows.append(run(1.1, 0.0, 3.0, "no pref. attachment"))
@@ -116,7 +116,7 @@ def main():
     print("  the cached Stage-1 anchors and correlate them per stock.  That is a")
     print("  minutes-long check and it forecasts the outcome of the whole")
     print("  experiment.  Run it before committing to the full ablation.")
-    print("\nDESIGN SIMULATION ONLY -- no number here is an experimental result.")
+    print("\nDESIGN STUDY ONLY -- no number here is an experimental result.")
 
 
 if __name__ == "__main__":

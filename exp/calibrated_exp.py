@@ -1,5 +1,5 @@
 """
-Calibrated simulation for the Paper 3 diagnostics that were reported without
+Calibrated model for the Paper 3 diagnostics that were reported without
 dispersion, sensitivity, or market-model detail.
 
 Design rule: every free parameter is pinned to a quantity ALREADY reported in

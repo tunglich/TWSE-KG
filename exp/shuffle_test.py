@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Focused design simulation for ONE experiment: the degree-matched random edge
+Focused design study for ONE experiment: the degree-matched random edge
 shuffle (rung A1) and its sector-preserving variant (rung A2).
 
 WHAT THIS IS AND IS NOT
@@ -24,7 +24,7 @@ No number produced here may be reported in the paper as a result.
       carry, the more of the lift a random graph reproduces.  We sweep the
       market-factor loading and report the A1 share of the lift at each level.
 
-DESIGN RULE: unchanged from calibrated_sim.py / ablation_design.py.  Two free
+DESIGN RULE: unchanged from calibrated_exp.py / ablation_design.py.  Two free
 parameters (kappa, theta) fitted to two reported anchors (F1_Direct = 0.5309,
 F1_KG = 0.6456); F1_MarketWide = 0.5040 held back as an out-of-sample check.
 """
@@ -177,7 +177,7 @@ def main():
               f" {fk-aa.mean():+8.4f} {100*share:8.1f}% "
               f"{(fk-aa.mean())/max(aa.std(ddof=1),1e-6):7.1f}")
 
-    print(f"\n[elapsed {time.time()-t0:.0f}s]  DESIGN SIMULATION ONLY -- "
+    print(f"\n[elapsed {time.time()-t0:.0f}s]  DESIGN STUDY ONLY -- "
           f"no number here is an experimental result.")
 
 

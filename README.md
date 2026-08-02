@@ -53,7 +53,7 @@ TWSE-KG/
 │   └── Sentiment_score_all.xlsx  # All experimental data (7 sheets)
 ├── docs/
 │   └── data_schema.md          # Data dictionary for xlsx sheets
-└── sim/                        # Ablation kit (shuffled-edge control)
+└── exp/                        # Ablation kit (shuffled-edge control)
     ├── ABLATION_SPEC.md
     ├── RUNBOOK_SHUFFLED_EDGE.md
     ├── shuffle_control.py

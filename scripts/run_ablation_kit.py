@@ -1,7 +1,7 @@
 """
 Utility script — run the ablation kit selftests.
 
-Wraps the sim/ directory scripts so they can be invoked from the repo root
+Wraps the exp/ directory scripts so they can be invoked from the repo root
 with a single command, matching the Market-Timing-DQN utility-script pattern.
 
 CLI:
@@ -16,15 +16,15 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SIM_DIR = REPO_ROOT / "sim"
+EXP_DIR = REPO_ROOT / "exp"
 
 
 def run_selftest(script: str) -> int:
     """Run a script with --selftest flag and return exit code."""
     print(f"\n--- {script} --selftest ---")
     result = subprocess.run(
-        [sys.executable, str(SIM_DIR / script), "--selftest"],
-        cwd=str(SIM_DIR),
+        [sys.executable, str(EXP_DIR / script), "--selftest"],
+        cwd=str(EXP_DIR),
         capture_output=False,
     )
     return result.returncode
@@ -39,7 +39,7 @@ def main() -> int:
     all_ok = True
 
     for script in scripts:
-        if not (SIM_DIR / script).exists():
+        if not (EXP_DIR / script).exists():
             print(f"  [skip] {script} not found")
             continue
         rc = run_selftest(script)

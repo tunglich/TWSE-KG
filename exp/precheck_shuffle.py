@@ -28,7 +28,7 @@ over the held-out window.  That correlation forecasts the whole experiment:
 Reasoning: a degree-matched shuffle preserves every node's degree, so hub firms
 stay hubs.  If the transmitted signal is hub-dominated, a random graph loads on
 the same news and inherits most of the signal regardless of who is wired to whom.
-The design simulation (shuffle_mechanism.py) found the A1 share of the lift
+The design study (shuffle_mechanism.py) found the A1 share of the lift
 ranges 60-106% across plausible worlds, tracking exactly this correlation.
 This script measures the real value instead of guessing it.
 

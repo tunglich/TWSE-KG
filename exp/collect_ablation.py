@@ -29,7 +29,7 @@ Example:
 USAGE
 -----
     python3 collect_ablation.py --results results.csv
-    python3 collect_ablation.py --selftest        # synthetic, verifies the maths
+    python3 collect_ablation.py --selftest        # synthetic, verifies the arithmetic
 
 WHAT IT PRINTS
 --------------

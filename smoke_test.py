@@ -121,12 +121,12 @@ def main() -> int:
 
     # 6. Ablation kit scripts present
     section("6. Ablation Kit Scripts")
-    sim_dir = REPO_ROOT / "sim"
+    exp_dir = REPO_ROOT / "exp"
     for script in ["shuffle_control.py", "ablation_design.py", "collect_ablation.py"]:
-        if (sim_dir / script).exists():
-            ok(f"sim/{script}")
+        if (exp_dir / script).exists():
+            ok(f"exp/{script}")
         else:
-            fail(f"sim/{script} missing")
+            fail(f"exp/{script} missing")
 
     _print_summary(t0)
     return 1 if failed else 0
