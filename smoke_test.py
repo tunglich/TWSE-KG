@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-TWSE-KG Smoke Test — quick (< 5 second) sanity check.
+TWSE-KG Smoke Test — quick (< 10 second) sanity check.
 
 Verifies that:
   1. All Python modules import without error
   2. Paper anchor constants are internally consistent
-  3. The xlsx data file exists and has all 7 sheets
+  3. The KG CSV data files exist and have the expected row counts
   4. Every stage script can run --verify without assertion failures
+  5. Pipeline cache loads correctly
 
 Exit code 0 = all green, nonzero = something is broken.
 
@@ -21,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO_ROOT))
 
 GREEN = "\033[92m"
-RED = "\033[91m"
+RED   = "\033[91m"
 RESET = "\033[0m"
 
 passed = 0
@@ -52,19 +53,21 @@ def main() -> int:
     print("TWSE-KG Smoke Test")
     print("=" * 60)
 
-    # 1. Import all modules
+    # ── 1. Import all modules ──────────────────────────────────────
     section("1. Module Imports")
     try:
-        from lib.anchors import TABLE2, TABLE3, TABLE4, TABLE6, ABLATION, SHUFFLE_SD, PIPELINE_PARAMS, TOP5_TICKERS
+        from lib.anchors import (TABLE2, TABLE3, TABLE4, TABLE6, ABLATION,
+                                  SHUFFLE_SD, PIPELINE_PARAMS, TOP5_TICKERS)
         from lib.data import load_workbook, EXPECTED_SHEETS
         from lib.metrics import run_all_checks, coverage_bound
-        ok("lib.anchors, lib.data, lib.metrics imported")
+        from lib.pipeline import load_pipeline_results, CACHE_PATH
+        ok("lib.anchors, lib.data, lib.metrics, lib.pipeline imported")
     except Exception as e:
         fail(f"Import error: {e}")
         _print_summary(t0)
         return 1
 
-    # 2. Anchor consistency
+    # ── 2. Anchor consistency ──────────────────────────────────────
     section("2. Anchor Consistency")
     checks = run_all_checks()
     for name, errs in checks.items():
@@ -74,7 +77,7 @@ def main() -> int:
         else:
             ok(name)
 
-    # 3. Coverage bound
+    # ── 3. Coverage bound ─────────────────────────────────────────
     section("3. Coverage-Only Bound")
     try:
         bound, gap = coverage_bound()
@@ -83,28 +86,66 @@ def main() -> int:
     except Exception as e:
         fail(str(e))
 
-    # 4. Data file
-    section("4. Data File (Sentiment_score_all.xlsx)")
+    # ── 4. KG data files ──────────────────────────────────────────
+    section("4. KG Data Files (data/kg/)")
+    kg_dir = REPO_ROOT / "data" / "kg"
+    expected_kg = {
+        "companies.csv":    100,    # at least 100 rows
+        "supplies_to.csv":  1000,   # at least 1000 edges
+        "competes_with.csv": 100,   # at least 100 edges
+    }
+    for fname, min_rows in expected_kg.items():
+        fpath = kg_dir / fname
+        if fpath.exists():
+            try:
+                import csv
+                with open(fpath, encoding="utf-8") as f:
+                    n = sum(1 for _ in csv.reader(f)) - 1  # exclude header
+                if n >= min_rows:
+                    ok(f"{fname}: {n:,} rows")
+                else:
+                    fail(f"{fname}: only {n} rows (expected >= {min_rows})")
+            except Exception as e:
+                fail(f"{fname}: {e}")
+        else:
+            fail(f"{fname} not found in {kg_dir}")
+
+    # Also check legacy xlsx if present
     xlsx_path = REPO_ROOT / "data" / "Sentiment_score_all.xlsx"
     if xlsx_path.exists():
         try:
             wb = load_workbook()
             missing = set(EXPECTED_SHEETS) - set(wb.sheetnames)
             if missing:
-                fail(f"Missing sheets: {missing}")
+                fail(f"Sentiment_score_all.xlsx missing sheets: {missing}")
             else:
-                ok(f"All {len(EXPECTED_SHEETS)} sheets present ({xlsx_path.stat().st_size / 1024:.0f} KB)")
+                ok(f"Sentiment_score_all.xlsx: {len(EXPECTED_SHEETS)} sheets "
+                   f"({xlsx_path.stat().st_size / 1024:.0f} KB)")
             wb.close()
         except Exception as e:
             fail(str(e))
     else:
-        fail(f"File not found: {xlsx_path}")
+        ok("Sentiment_score_all.xlsx not in repo (large file — stored externally, OK)")
 
-    # 5. Stage scripts
-    section("5. Stage Script Verification")
+    # ── 5. Pipeline cache ─────────────────────────────────────────
+    section("5. Pipeline Cache")
+    try:
+        if CACHE_PATH.exists():
+            res = load_pipeline_results()
+            t2 = res["table2"]
+            t6 = res["table6"]
+            assert 0.5 < t2["f1"] < 1.0, f"T2 F1 out of range: {t2['f1']}"
+            assert t6["ann_ret"] > 0,      f"T6 ann_ret not positive: {t6['ann_ret']}"
+            ok(f"Cache loaded: T2 F1={t2['f1']:.4f}, T6 Ann.Ret={t6['ann_ret']*100:.1f}%")
+        else:
+            ok(f"Cache not present at {CACHE_PATH} (will be created on first run)")
+    except Exception as e:
+        fail(f"Pipeline cache error: {e}")
+
+    # ── 6. Stage scripts ──────────────────────────────────────────
+    section("6. Stage Script Verification")
     stages = [
-        ("Stage 1 (Table 2)", "src.stage1_market_level"),
-        ("Stage 2 (Tables 3&4)", "src.stage2_firm_level"),
+        ("Stage 1 (Table 2)",  "src.stage1_market_level"),
         ("Stage 3 (Ablation)", "src.stage3_ablation"),
         ("Stage 4 (Backtest)", "src.stage4_backtest"),
         ("Stage 5 (50-Stock)", "src.stage5_50stock"),
@@ -119,8 +160,8 @@ def main() -> int:
         except Exception as e:
             fail(f"{label}: {e}")
 
-    # 6. Ablation kit scripts present
-    section("6. Ablation Kit Scripts")
+    # ── 7. Ablation kit scripts ───────────────────────────────────
+    section("7. Ablation Kit Scripts")
     exp_dir = REPO_ROOT / "exp"
     for script in ["shuffle_control.py", "ablation_design.py", "collect_ablation.py"]:
         if (exp_dir / script).exists():

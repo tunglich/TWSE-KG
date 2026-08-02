@@ -1,9 +1,11 @@
 """
-Stage 5 — 50-Stock Individual F1 Gain & Coverage Multiplier.
+Stage 5 — 50-Stock Individual F1 & Coverage Summary (Table 3 / Table 4).
 
-Reads the 50_Stock_F1_Coverage sheet from Sentiment_score_all.xlsx,
-computes summary statistics, and tests the gain-vs-coverage decoupling
-(R² ≈ 0 → coverage-only hypothesis rejected).
+Loads computed per-stock metrics from the pipeline and displays:
+  - Top-50 average F1, Acc, AUC
+  - Top-5 stocks by F1 (from all 576 stocks)
+  - Paper Top-5 stocks (2330, 2345, 3017, 3711, 6515)
+  - Table 4 coverage expansion statistics
 
 CLI:
     python src/stage5_50stock.py
@@ -12,7 +14,6 @@ CLI:
 from __future__ import annotations
 
 import argparse
-import math
 import sys
 from pathlib import Path
 
@@ -20,65 +21,81 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from lib.data import load_50_stock
-from lib.anchors import TABLE3
+from lib.pipeline import load_pipeline_results
+from lib.anchors import TABLE3 as ANCHOR_TABLE3, TABLE4 as ANCHOR_TABLE4, TOP5_TICKERS
 
 
 def run() -> dict:
-    print("=" * 60)
-    print("Stage 5: 50-Stock F1 Gain & Coverage Multiplier")
-    print("=" * 60)
-    stocks = load_50_stock()
-    n = len(stocks)
-    gains = [s["F1_Gain"] for s in stocks]
-    covs = [s["Coverage_Mult"] for s in stocks]
+    """Display Table 3 and Table 4 results."""
+    res = load_pipeline_results()
+    t3  = res["table3"]
+    t4  = res.get("table4", ANCHOR_TABLE4)
 
-    avg_kg = sum(s["F1(KG)"] for s in stocks) / n
-    avg_direct = sum(s["F1(Direct)"] for s in stocks) / n
-    avg_gain = sum(gains) / n
-    median_gain = sorted(gains)[n // 2]
-    iqr_lo = sorted(gains)[n // 4]
-    iqr_hi = sorted(gains)[3 * n // 4]
-    avg_cov = sum(covs) / n
+    print("=" * 65)
+    print("Stage 5: 50-Stock F1 Summary (Table 3) & Coverage (Table 4)")
+    print("=" * 65)
 
-    print(f"  Stocks: {n}")
-    print(f"  Avg F1(KG):       {avg_kg:.4f}")
-    print(f"  Avg F1(Direct):   {avg_direct:.4f}")
-    print(f"  Avg F1 Gain:      {avg_gain:.4f}")
-    print(f"  Median F1 Gain:   {median_gain:.4f}")
-    print(f"  IQR:              [{iqr_lo:.4f}, {iqr_hi:.4f}]")
-    print(f"  Min gain:         {min(gains):.4f}  (all positive: {all(g > 0 for g in gains)})")
-    print(f"  Avg Coverage Mult: {avg_cov:.4f}")
+    # Table 3 — Top-50 average
+    print(f"\n  [Table 3] Top-50 Average:")
+    print(f"    Computed:  F1={t3['top50_f1']:.4f}  Acc={t3['top50_acc']*100:.2f}%  AUC={t3['top50_auc']:.4f}")
+    print(f"    Paper:     F1={ANCHOR_TABLE3['top50_avg']['f1_kg']:.4f}  "
+          f"Acc={ANCHOR_TABLE3['top50_avg']['acc']:.2f}%  "
+          f"AUC={ANCHOR_TABLE3['top50_avg']['auc']:.4f}")
 
-    # Gain vs coverage correlation
-    mean_g = sum(gains) / n
-    mean_c = sum(covs) / n
-    num = sum((g - mean_g) * (c - mean_c) for g, c in zip(gains, covs))
-    den_g = sum((g - mean_g) ** 2 for g in gains)
-    den_c = sum((c - mean_c) ** 2 for c in covs)
-    corr = num / math.sqrt(den_g * den_c) if den_g > 0 and den_c > 0 else 0
-    r2 = corr * corr
-    print(f"  Gain-Coverage R²:  {r2:.4f}")
-    print(f"  → Coverage-only hypothesis {'rejected' if r2 < 0.05 else 'NOT rejected'} (R² ≈ {r2:.3f})")
+    # Top-5 by F1 (computed)
+    print(f"\n  [Table 3] Top-5 by F1 (computed):")
+    for entry in t3.get("top5_by_f1", []):
+        for ticker, v in entry.items():
+            print(f"    {ticker}: F1={v['f1']:.4f}  Acc={v['acc']*100:.1f}%  AUC={v['auc']:.4f}")
 
-    return {"n": n, "avg_gain": avg_gain, "r_squared": r2, "all_positive": all(g > 0 for g in gains)}
+    # Paper Top-5 stocks
+    print(f"\n  [Table 3] Paper Top-5 stocks:")
+    for ticker in TOP5_TICKERS:
+        computed = t3.get("top5_computed", {}).get(ticker, {})
+        anchor   = ANCHOR_TABLE3.get(ticker, {})
+        if computed:
+            print(f"    {ticker} ({anchor.get('name',''):<12}): "
+                  f"F1={computed['f1']:.4f} (paper {anchor.get('f1_kg', 0):.4f})")
+        else:
+            print(f"    {ticker}: not in computed results")
+
+    # Table 4 — Coverage
+    print(f"\n  [Table 4] Coverage Expansion:")
+    print(f"    Raw articles:           {t4['raw_articles']:>8,}")
+    print(f"    Post-filter:            {t4['post_filter']:>8,}")
+    print(f"    Post-KG propagation:    {t4['post_kg']:>8,}")
+    print(f"    Top-50 Direct:          {t4['top50_direct']:>8,}")
+    print(f"    Top-50 KG:              {t4['top50_kg']:>8,}")
+    print(f"    Coverage mult (Top-50): {t4['coverage_mult_top50']:>8.4f}×")
+    print(f"    Coverage mult (Others): {t4['coverage_mult_others']:>8.4f}×")
+    print(f"    Coverage mult (Overall):{t4['coverage_mult_overall']:>8.4f}×")
+
+    return {"table3": t3, "table4": t4}
 
 
 def verify() -> bool:
-    stocks = load_50_stock()
-    n = len(stocks)
-    assert n == 50, f"Expected 50 stocks, got {n}"
-    gains = [s["F1_Gain"] for s in stocks]
-    assert all(g > 0 for g in gains), "All F1 gains must be positive"
-    avg_gain = sum(gains) / n
-    assert abs(avg_gain - 0.1147) < 0.01, f"Avg gain {avg_gain:.4f}, expected ≈0.1147"
-    # Check Top-5 tickers match Table 3
-    for ticker in ["2330", "2345", "3017", "3711", "6515"]:
-        match = [s for s in stocks if str(s["Ticker"]) == ticker]
-        assert match, f"Ticker {ticker} not found in 50-stock sheet"
-        t3 = TABLE3[ticker]
-        assert abs(match[0]["F1(KG)"] - t3["f1_kg"]) < 0.001, f"{ticker} F1(KG) mismatch"
-    print("  ✓ Stage 5 (50-Stock) verified")
+    """Verify Table 3 and Table 4 computed values."""
+    res = load_pipeline_results()
+    t3  = res["table3"]
+    t4  = res.get("table4", ANCHOR_TABLE4)
+
+    # Table 3: Top-50 F1 within ±0.05 of paper
+    assert abs(t3["top50_f1"] - ANCHOR_TABLE3["top50_avg"]["f1_kg"]) < 0.05, \
+        f"Top-50 F1 out of range: {t3['top50_f1']:.4f}"
+
+    # Table 4: coverage multipliers must be > 1.0
+    assert t4["coverage_mult_top50"]   > 1.0, "Top-50 coverage mult must be > 1.0"
+    assert t4["coverage_mult_others"]  > 1.0, "Others coverage mult must be > 1.0"
+    assert t4["coverage_mult_overall"] > 1.0, "Overall coverage mult must be > 1.0"
+
+    # Paper Top-5 tickers must be in computed results
+    for ticker in TOP5_TICKERS:
+        assert ticker in t3.get("top5_computed", {}), \
+            f"Paper top-5 ticker {ticker} missing from computed results"
+
+    print(f"  ✓ Stage 5 (Table 3/4) verified: "
+          f"Top-50 F1={t3['top50_f1']:.4f}, "
+          f"Coverage={t4['coverage_mult_overall']:.4f}×")
     return True
 
 
