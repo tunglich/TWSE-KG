@@ -93,15 +93,15 @@ make ablation
 
 ## Data Description (Sentiment_score_all.xlsx)
 
-| Sheet | Content |
-|-------|---------|
-| Table3_Prediction | Tier-2 same-day F1 for Top-5 companies + Top-50 average |
-| Table4_Coverage | Coverage expansion statistics (raw → post-filter → post-KG) |
-| Table6_Backtest | Cost-adjusted backtest results (KG vs LLM-Direct vs TAIEX) |
-| Ablation_Ladder | 7-rung shuffled-edge control ablation |
-| 50_Stock_F1_Coverage | 50-stock individual F1 gain and coverage multiplier |
-| Table2_MarketLevel | Tier-1 market-level nowcast/forecast |
-| Pipeline_Params | Fixed ex-ante pipeline parameters |
+| Sheet | Content | Run Script |
+|-------|---------|------------|
+| Table3_Prediction | Tier-2 same-day F1 for Top-5 companies + Top-50 average | `python src/stage5_50stock.py` |
+| Table4_Coverage | Coverage expansion statistics (raw → post-filter → post-KG) | `python src/stage5_50stock.py` |
+| Table6_Backtest | Cost-adjusted backtest results (KG vs LLM-Direct vs TAIEX) | `python src/stage4_backtest.py` |
+| Ablation_Ladder | 7-rung shuffled-edge control ablation | `python src/stage3_ablation.py` |
+| 50_Stock_F1_Coverage | 50-stock individual F1 gain and coverage multiplier | `python src/stage5_50stock.py` |
+| Table2_MarketLevel | Tier-1 market-level nowcast/forecast | `python src/stage1_market_level.py` |
+| Pipeline_Params | Fixed ex-ante pipeline parameters | `python src/compute_from_csv.py` |
 
 See [docs/data_schema.md](docs/data_schema.md) for full column descriptions.
 
