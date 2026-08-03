@@ -15,13 +15,13 @@ The system uses a two-tier sentiment scoring architecture:
 
 ## Pipeline
 
-```
-Stage 1                Stage 2                Stage 3              Stage 4              Stage 5
-┌─────────────┐      ┌─────────────┐       ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Market-Level │      │ Firm-Level  │       │  Ablation   │     │  Backtest   │     │  50-Stock   │
-│  Nowcast     │ ──▶  │ KG Prop.    │  ──▶  │ Shuffled-   │ ──▶ │ Cost-Adj.  │ ──▶ │ F1 & Cov.  │
-│  (Table 2)  │      │ (Table 3,4) │       │ Edge Ctrl   │     │ (Table 6)  │     │ (§5)       │
-└─────────────┘      └─────────────┘       └─────────────┘     └─────────────┘     └─────────────┘
+```mermaid
+flowchart LR
+    S1["**Stage 1**\nMarket-Level\nNowcast\n*(Table 2)*"] -->
+    S2["**Stage 2**\nFirm-Level\nKG Prop.\n*(Table 3, 4)*"] -->
+    S3["**Stage 3**\nAblation\nShuffled-Edge Ctrl\n*(§5)*"] -->
+    S4["**Stage 4**\nBacktest\nCost-Adj.\n*(Table 6)*"] -->
+    S5["**Stage 5**\n50-Stock\nF1 & Cov.\n*(§5)*"]
 ```
 
 ## Repository Structure
