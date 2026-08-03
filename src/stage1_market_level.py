@@ -1,8 +1,8 @@
 """
-Stage 1 — Tier-1 Market-Level Nowcast/Forecast.
+Stage 1 — Tier-1 Market-Level Nowcast/Forecast (Table 2).
 
-Reproduces Table 2: cross-market (TW+US) aggregate sentiment scoring.
-Outputs same-day nowcast and next-day forecast F1/accuracy/AUC.
+Loads computed Tier-1 results from the pipeline and displays
+same-day nowcast vs next-day forecast F1/Acc/AUC, with computed vs paper comparison.
 
 CLI:
     python src/stage1_market_level.py
@@ -19,34 +19,45 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from lib.anchors import TABLE2
+from lib.pipeline import load_pipeline_results
+from lib.anchors import TABLE2 as ANCHOR_TABLE2
 
 
 def run() -> dict:
-    """Produce Table 2 numbers."""
-    sd = TABLE2["same_day"]
-    nd = TABLE2["next_day"]
-    print("=" * 60)
+    """Display Table 2 computed vs paper values."""
+    res = load_pipeline_results()
+    sd  = res["table2"]
+    paper_sd = ANCHOR_TABLE2["same_day"]
+    paper_nd = ANCHOR_TABLE2["next_day"]
+
+    print("=" * 65)
     print("Stage 1: Tier-1 Market-Level Nowcast/Forecast (Table 2)")
-    print("=" * 60)
-    print(f"  Same-day nowcast:   F1={sd['f1']:.4f}  Acc={sd['acc']:.2f}%  AUC={sd['auc']:.4f}")
-    print(f"  Next-day forecast:  F1={nd['f1']:.4f}  Acc={nd['acc']:.2f}%")
-    gain_acc = sd['acc'] - nd['acc']
-    gain_f1_rel = (sd['f1'] - nd['f1']) / nd['f1'] * 100
-    print(f"  Gain: +{gain_acc:.1f}pp accuracy, {gain_f1_rel:.0f}% relative F1 gain")
-    return {"same_day": sd, "next_day": nd}
+    print("=" * 65)
+    print(f"\n  {'Metric':<22} {'Computed':>10} {'Paper':>10} {'Delta':>10}")
+    print(f"  {'-'*54}")
+    print(f"  {'Same-day F1':<22} {sd['f1']:>10.4f} {paper_sd['f1']:>10.4f} {sd['f1']-paper_sd['f1']:>+10.4f}")
+    print(f"  {'Same-day Acc':<22} {sd['acc']*100:>9.2f}% {paper_sd['acc']:>9.2f}% {(sd['acc']*100-paper_sd['acc']):>+9.2f}pp")
+    print(f"  {'Same-day AUC':<22} {sd['auc']:>10.4f} {paper_sd['auc']:>10.4f} {sd['auc']-paper_sd['auc']:>+10.4f}")
+    print(f"\n  Next-day forecast (paper only):")
+    print(f"    F1={paper_nd['f1']:.4f}  Acc={paper_nd['acc']:.2f}%")
+    gain_f1  = sd["f1"]  - paper_nd["f1"]
+    gain_acc = sd["acc"] * 100 - paper_nd["acc"]
+    print(f"\n  Computed same-day vs paper next-day: +{gain_f1:.4f} F1, +{gain_acc:.2f}pp Acc")
+    return {"computed": sd, "paper_same_day": paper_sd, "paper_next_day": paper_nd}
 
 
 def verify() -> bool:
-    """Verify Table 2 anchors."""
-    sd = TABLE2["same_day"]
-    nd = TABLE2["next_day"]
-    assert sd["f1"] == 0.7357, f"Same-day F1 mismatch: {sd['f1']}"
-    assert sd["acc"] == 68.13, f"Same-day Acc mismatch: {sd['acc']}"
-    assert sd["auc"] == 0.7170, f"Same-day AUC mismatch: {sd['auc']}"
-    assert nd["f1"] == 0.6064, f"Next-day F1 mismatch: {nd['f1']}"
-    assert nd["acc"] == 60.64, f"Next-day Acc mismatch: {nd['acc']}"
-    print("  ✓ Stage 1 (Table 2) verified")
+    """Verify Table 2 computed values are within acceptable range of paper."""
+    res = load_pipeline_results()
+    sd  = res["table2"]
+    paper = ANCHOR_TABLE2["same_day"]
+    assert abs(sd["f1"] - paper["f1"]) < 0.10, \
+        f"Same-day F1 too far from paper: computed={sd['f1']:.4f}, paper={paper['f1']:.4f}"
+    assert sd["auc"] > 0.5, f"Same-day AUC below 0.5: {sd['auc']:.4f}"
+    assert sd["acc"] > 0.50, f"Same-day Acc below 50%: {sd['acc']*100:.2f}%"
+    print(f"  ✓ Stage 1 (Table 2) verified: "
+          f"F1={sd['f1']:.4f} (paper {paper['f1']:.4f}), "
+          f"Acc={sd['acc']*100:.2f}%, AUC={sd['auc']:.4f}")
     return True
 
 

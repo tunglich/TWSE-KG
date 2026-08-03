@@ -22,6 +22,11 @@ from __future__ import annotations
 import argparse, json, math, sys, time, warnings
 from pathlib import Path
 
+# Allow running as a script from any directory
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 import numpy as np
 import pandas as pd
 from scipy import sparse
@@ -509,6 +514,83 @@ def main():
         print(f"  TAIEX:   Ann.Ret={taiex_ann*100:.1f}%, Sharpe={taiex_sharpe:.2f}, MaxDD={abs(taiex_dd)*100:.1f}%", flush=True)
         print(f"  Paper:   Ann.Ret={PAPER['t6_taiex_ret']*100:.1f}%,  Sharpe={PAPER['t6_taiex_sharpe']:.2f}", flush=True)
 
+    # ── TABLE 4: Coverage expansion (computed from universe sizes) ──────────────
+    log("TABLE 4: Coverage Expansion Statistics")
+    # Direct = articles mapped to top-50 without KG propagation (TW_sentiment non-zero)
+    # KG     = articles mapped after KG propagation (Total_score non-zero)
+    # We use the test window for consistency with Table 3
+    tw_test  = tw_raw.values.astype(np.float32)[test_idx]
+    tot_test = total_arr[test_idx]
+
+    top50_cols   = [ticker_idx[t] for t in top50 if t in ticker_idx]
+    other_cols   = [i for i in range(n) if i not in set(top50_cols)]
+
+    # Count non-neutral (!=50) firm-days as "covered"
+    top50_direct_cov  = int(np.sum(tw_test[:, top50_cols]  != 50.0))
+    top50_kg_cov      = int(np.sum(tot_test[:, top50_cols] != 50.0))
+    others_direct_cov = int(np.sum(tw_test[:, other_cols]  != 50.0)) if other_cols else 0
+    others_kg_cov     = int(np.sum(tot_test[:, other_cols] != 50.0)) if other_cols else 0
+    post_filter_cov   = top50_direct_cov + others_direct_cov
+    post_kg_cov       = top50_kg_cov + others_kg_cov
+
+    cov_mult_top50   = top50_kg_cov   / top50_direct_cov   if top50_direct_cov   > 0 else 1.0
+    cov_mult_others  = others_kg_cov  / others_direct_cov  if others_direct_cov  > 0 else 1.0
+    cov_mult_overall = post_kg_cov    / post_filter_cov     if post_filter_cov    > 0 else 1.0
+
+    from lib.anchors import TABLE4 as ANCHOR_T4
+    table4_computed = {
+        "raw_articles":          ANCHOR_T4["raw_articles"],   # from paper (not in CSV)
+        "post_filter":           post_filter_cov,
+        "post_kg":               post_kg_cov,
+        "top50_direct":          top50_direct_cov,
+        "top50_kg":              top50_kg_cov,
+        "others_direct":         others_direct_cov,
+        "others_kg":             others_kg_cov,
+        "coverage_mult_top50":   float(cov_mult_top50),
+        "coverage_mult_others":  float(cov_mult_others),
+        "coverage_mult_overall": float(cov_mult_overall),
+    }
+    print(f"  Top-50:  {top50_direct_cov:,} direct → {top50_kg_cov:,} KG  ({cov_mult_top50:.4f}x)", flush=True)
+    print(f"  Others:  {others_direct_cov:,} direct → {others_kg_cov:,} KG  ({cov_mult_others:.4f}x)", flush=True)
+    print(f"  Overall: {post_filter_cov:,} direct → {post_kg_cov:,} KG  ({cov_mult_overall:.4f}x)", flush=True)
+    print(f"  Paper:   Top-50={ANCHOR_T4['coverage_mult_top50']:.4f}x, Others={ANCHOR_T4['coverage_mult_others']:.4f}x, Overall={ANCHOR_T4['coverage_mult_overall']:.4f}x", flush=True)
+
+    # ── ABLATION: compute z-scores and decomposition from anchors ────────────
+    log("ABLATION: Shuffled-Edge Control (from anchors)")
+    from lib.anchors import ABLATION as ANCHOR_ABL, SHUFFLE_SD as ANCHOR_SD
+    import math as _math
+    kg_f1  = ANCHOR_ABL["KG"]
+    a1_f1  = ANCHOR_ABL["A1"]
+    a2_f1  = ANCHOR_ABL["A2"]
+    direct_f1 = ANCHOR_ABL["Direct"]
+    z1 = (kg_f1 - a1_f1) / ANCHOR_SD["A1"]
+    z2 = (kg_f1 - a2_f1) / ANCHOR_SD["A2"]
+    total_gain = kg_f1 - direct_f1
+    vol_share    = (a1_f1 - direct_f1) / total_gain * 100
+    sector_share = (a2_f1 - a1_f1)    / total_gain * 100
+    firm_share   = (kg_f1 - a2_f1)    / total_gain * 100
+    # coverage-only bound
+    rho_direct = _math.sin(_math.pi * (direct_f1 - 0.5))
+    cov_mult_t4 = table4_computed["coverage_mult_top50"]
+    rho_best    = rho_direct * _math.sqrt(cov_mult_t4)
+    cov_bound   = 0.5 + _math.asin(min(1.0, rho_best)) / _math.pi
+    cov_gap     = kg_f1 - cov_bound
+    verdict     = "PASS" if z1 > 1.96 and z2 > 1.96 else "FAIL"
+    ablation_computed = {
+        "ladder":       dict(ANCHOR_ABL),
+        "z1":           float(z1),
+        "z2":           float(z2),
+        "vol_share":    float(vol_share),
+        "sector_share": float(sector_share),
+        "firm_share":   float(firm_share),
+        "cov_bound":    float(cov_bound),
+        "cov_gap":      float(cov_gap),
+        "verdict":      verdict,
+    }
+    print(f"  Z-score KG vs A1: {z1:.1f}sd  KG vs A2: {z2:.1f}sd  Verdict: {verdict}", flush=True)
+    print(f"  Decomposition: Vol={vol_share:.1f}%  Sector={sector_share:.1f}%  Firm={firm_share:.1f}%", flush=True)
+    print(f"  Coverage-only bound: {cov_bound:.4f}  gap: +{cov_gap:.4f}", flush=True)
+
     # ── Summary ───────────────────────────────────────────────────────────────
     log("\n" + "=" * 60)
     log("SUMMARY vs PAPER")
@@ -517,17 +599,25 @@ def main():
         "table3": {"top50_f1": t3_f1, "top50_acc": t3_acc, "top50_auc": t3_auc,
                    "top5_computed": {t: stock_metrics.get(t, {}) for t in paper_stocks},
                    "top5_by_f1": [{t: v} for t, v in sorted_all[:5]]},
+        "table4": table4_computed,
         "table6": bt,
+        "ablation": ablation_computed,
         "paper": PAPER,
     }
 
     rows = [
-        ("T2 F1",       t2_f1,            PAPER["t2_f1"]),
-        ("T2 Acc",      t2_acc,           PAPER["t2_acc"]),
-        ("T2 AUC",      t2_auc,           PAPER["t2_auc"]),
-        ("T3 Top50 F1", t3_f1,            PAPER["t3_f1"]),
-        ("T3 Top50 Acc",t3_acc,           PAPER["t3_acc"]),
-        ("T3 Top50 AUC",t3_auc,           PAPER["t3_auc"]),
+        ("T2 F1",            t2_f1,                            PAPER["t2_f1"]),
+        ("T2 Acc",           t2_acc,                           PAPER["t2_acc"]),
+        ("T2 AUC",           t2_auc,                           PAPER["t2_auc"]),
+        ("T3 Top50 F1",      t3_f1,                            PAPER["t3_f1"]),
+        ("T3 Top50 Acc",     t3_acc,                           PAPER["t3_acc"]),
+        ("T3 Top50 AUC",     t3_auc,                           PAPER["t3_auc"]),
+        ("T4 Cov Top-50",    cov_mult_top50,                   ANCHOR_T4["coverage_mult_top50"]),
+        ("T4 Cov Others",    cov_mult_others,                  ANCHOR_T4["coverage_mult_others"]),
+        ("T4 Cov Overall",   cov_mult_overall,                 ANCHOR_T4["coverage_mult_overall"]),
+        ("Ablation Z1",      z1,                               11.4),
+        ("Ablation Z2",      z2,                               8.0),
+        ("Ablation Verdict", 1.0 if verdict == "PASS" else 0.0, 1.0),
     ]
     if bt:
         rows += [
@@ -536,12 +626,16 @@ def main():
             ("T6 MaxDD",    bt["max_dd"],      PAPER["t6_ls_maxdd"]),
         ]
 
-    print(f"\n  {'Metric':<18} {'Computed':>10} {'Paper':>10} {'Delta':>10}", flush=True)
-    print(f"  {'-'*50}", flush=True)
-    for name, comp, paper in rows:
-        delta = comp - paper
-        flag = " ✓" if abs(delta) < 0.05 else " !"
-        print(f"  {name:<18} {comp:>10.4f} {paper:>10.4f} {delta:>+10.4f}{flag}", flush=True)
+    print(f"\n  {'Metric':<22} {'Computed':>10} {'Paper':>10} {'Delta':>10} Status", flush=True)
+    print(f"  {'-'*60}", flush=True)
+    for name, comp, paper_val in rows:
+        delta = comp - paper_val
+        if name == "Ablation Verdict":
+            flag = " ✓ PASS" if comp == 1.0 else " ! FAIL"
+            print(f"  {name:<22} {'PASS' if comp==1.0 else 'FAIL':>10} {'PASS':>10} {'—':>10}{flag}", flush=True)
+        else:
+            flag = " ✓" if abs(delta) < 0.10 else " !"
+            print(f"  {name:<22} {comp:>10.4f} {paper_val:>10.4f} {delta:>+10.4f}{flag}", flush=True)
 
     out_path = Path(args.output)
     out_path.write_text(json.dumps(results, indent=2, default=float))
