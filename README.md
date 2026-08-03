@@ -16,20 +16,21 @@ The system uses a two-tier sentiment scoring architecture:
 ## Pipeline
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "fontSize": "14px"}}}%%
 flowchart LR
-    S1(["Stage 1\nMarket-Level Nowcast\nTable 2"]) -->
-    S2(["Stage 2\nFirm-Level KG Prop.\nTable 3 & 4"]) -->
-    S3(["Stage 3\nAblation\nShuffled-Edge Ctrl"]) -->
-    S4(["Stage 4\nBacktest\nCost-Adj. · Table 6"]) -->
-    S5(["Stage 5\n50-Stock F1\n& Coverage · §5"])
+    S1["Stage 1\nMarket-Level Nowcast\n(Table 2)"] -->
+    S2["Stage 2\nFirm-Level KG Prop.\n(Table 3 & 4)"] -->
+    S3["Stage 3\nAblation\nShuffled-Edge Ctrl"] -->
+    S4["Stage 4\nBacktest Cost-Adj.\n(Table 6)"] -->
+    S5["Stage 5\n50-Stock F1 & Cov.\n(§5)"]
 
-    style S1 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
-    style S2 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
-    style S3 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
-    style S4 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
-    style S5 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
+    style S1 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style S2 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style S3 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style S4 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
+    style S5 fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
 
-    linkStyle default stroke:#4a90d9,stroke-width:2px
+    linkStyle default stroke:#000000,stroke-width:1.5px
 ```
 
 ## Repository Structure
