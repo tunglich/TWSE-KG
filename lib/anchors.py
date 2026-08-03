@@ -4,18 +4,32 @@ Paper anchor constants — ground-truth values from the ICAIF 2026 paper.
 Every number the pipeline reproduces or verifies against lives here so that
 stage scripts, the smoke test, and CI all reference a single source of truth.
 
-COMPUTED values (from compute_from_csv.py run on raw CSV data):
-  - TABLE2_COMPUTED: T2 F1=0.7738, Acc=68.35%, AUC=0.7794
-  - TABLE3_COMPUTED: Top-50 F1=0.6142
-  - TABLE6_COMPUTED: Ann.Ret=36.5%, Sharpe=2.16, MaxDD=9.2%
+Two sets of values are maintained in parallel:
 
-PAPER values (from ICAIF 2026 paper):
-  - TABLE2: T2 F1=0.7357, Acc=68.13%, AUC=0.7170
-  - TABLE3: Top-50 F1=0.6456
-  - TABLE6: KG L-S Ann.Ret=14.6%, Sharpe=1.12, MaxDD=9.6%
+PAPER values  — reported in the ICAIF 2026 paper (test window: 2024-01-02 to 2025-06-30,
+                 full 576-company universe, full LLM-scored corpus).
 
-Note: Computed values may differ from paper due to data preprocessing
-differences. Where computed > paper, this is acceptable (better results).
+COMPUTED values — reproduced by running compute_from_csv.py on the pre-scored CSV cache
+                  (same raw data, but with two known differences from the paper run):
+
+  Difference 1 — Extended test window:
+    The repo default extends to 2026-03-31 (latest available data), adding ~9 months
+    of 2025–2026 data not in the paper. The Taiwan market was strongly bullish in this
+    period, which raises backtest returns (T6: 36.5% vs paper 14.6%) and Sharpe (2.16
+    vs 1.12). To reproduce paper T6 numbers: --test-end 2025-06-30.
+
+  Difference 2 — Top-54 vs full-universe for Tier-1 market signal:
+    The repo default uses Top-54 stocks for the market-level mean, whereas the paper
+    uses all 576. This raises T2 F1 (0.7738 vs 0.7357). To reproduce paper T2:
+    run compute_from_csv.py --full-universe.
+
+  T3 Top-50 F1 (0.6142 vs paper 0.6456): The paper reports the best-performing
+    operating point; the repo uses the balanced-class threshold (score > 50).
+    The gap is a threshold-selection difference, not a data difference.
+
+All PAPER values are taken directly from the submitted manuscript tables.
+All COMPUTED values are produced by running the code in this repo on the
+pre-scored CSV cache (data/csv/). Neither set is fabricated or simulated.
 """
 
 # ─── Table 2: Tier-1 Market-Level Nowcast/Forecast ──────────────────────────

@@ -1,5 +1,16 @@
 # Paper 3 — KG ablation experiment: executable specification
 
+> **IMPORTANT — What is real vs. what is design-only**
+>
+> | File | Status | May appear in paper? |
+> |------|--------|---------------------|
+> | `ablation_design.py`, `calibrated_exp.py`, `shuffle_mechanism.py` | **Design simulation only** — uses a latent-Gaussian model calibrated to paper F1 values to estimate statistical power before running the real experiment | **NO** |
+> | `make_null_graphs.py`, `shuffle_control.py`, `precheck_shuffle.py` | **Real experiment infrastructure** — operates on the actual KG edges from `data/kg/` | **YES** (after running on real corpus) |
+> | `collect_ablation.py` | **Real result aggregator** — collects F1 from actual rung runs | **YES** |
+> | `precheck_out.csv` | **Real output** — correlation check on actual KG node pairs | **YES** |
+>
+> The design simulation scripts exist solely to answer "is this experiment worth running?" before committing compute. They are never a substitute for the real experiment.
+
 Prepared in response to review item 2 ("missing shuffled-edge / sector baseline",
 the reviewer's largest single gap). This document is the protocol to run on the
 real corpus. The accompanying `ablation_design.py` is a **design study
