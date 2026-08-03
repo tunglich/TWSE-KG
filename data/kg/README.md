@@ -46,11 +46,25 @@ This directory contains the complete Knowledge Graph (KG) data exported from the
 
 ## Statistics
 
-- **Total nodes**: 4,512 companies (TWSE + OTC listed)
+- **Total nodes**: 4,512 companies
 - **SUPPLIES_TO edges**: 5,509 (directed, supplier → customer)
 - **COMPETES_WITH edges**: 3,246 (undirected, stored as directed pairs)
 - **Mean out-degree (SUPPLIES_TO)**: ~2.4 per company
-- **Coverage**: 33 industry sectors, 576 actively traded stocks
+- **Coverage**: 33 industry sectors
+
+## Node Universe: 576 TWSE vs 4,512 Total
+
+The paper reports **576 Taiwan-listed companies** as the scoring universe. The KG contains **4,512 nodes** in total. This discrepancy is intentional and reflects the graph propagation design:
+
+| Node type | Count | Role |
+|-----------|-------|------|
+| TWSE/OTC-listed companies (scored) | 576 | Tier-2 scoring targets; receive daily SprintScore |
+| Overseas anchors (US, JP, KR, CN) | ~3,936 | Propagation sources only; not scored themselves |
+| **Total KG nodes** | **4,512** | All nodes used in graph propagation |
+
+Overseas anchors include companies such as ASML, Apple, NVIDIA, Samsung, and CATL. When a US company (e.g. Apple) has a strong earnings day, the sentiment propagates through `SUPPLIES_TO` edges to its Taiwanese suppliers (e.g. Hon Hai, Largan). The `is_twse_listed` column in `companies.csv` distinguishes the two groups.
+
+The `companies.csv` schema includes an `is_twse_listed` flag (1 = TWSE/OTC listed, 0 = overseas anchor). The pipeline's `--tw50` and `--full-universe` modes both restrict **scoring** to TWSE-listed nodes; overseas nodes are used only as propagation sources.
 
 ## Rebuilding the Neo4j Database
 

@@ -36,11 +36,13 @@ from sklearn.linear_model import LogisticRegression
 warnings.filterwarnings("ignore")
 sys.stdout.reconfigure(line_buffering=True)
 
-# ── Default paths ─────────────────────────────────────────────────────────────
-DEFAULT_CSV_DIR = Path("/home/ubuntu/upload/csv")
-DEFAULT_KG_DIR  = Path("/home/ubuntu/upload")
-DEFAULT_TW50    = Path("/home/ubuntu/upload/pasted_file_bD0Hmu_tw50_backtest_summary.csv")
-DEFAULT_INDEX   = Path("/home/ubuntu/upload/pasted_file_qhjAjn_Index.csv")
+# ── Default paths (relative to repo root) ────────────────────────────────────
+# Place your CSV files in data/csv/ following the layout in docs/data_schema.md
+# Override at runtime: python src/compute_from_csv.py --csv-dir /your/path
+DEFAULT_CSV_DIR = _REPO_ROOT / "data" / "csv"
+DEFAULT_KG_DIR  = _REPO_ROOT / "data" / "kg"
+DEFAULT_TW50    = _REPO_ROOT / "data" / "tw50_universe.csv"
+DEFAULT_INDEX   = _REPO_ROOT / "data" / "index_taiex.csv"
 
 # ── Paper hyperparameters (all set ex ante, not tuned on test window) ─────────
 GAMMA      = 0.5        # KG propagation decay per hop
@@ -241,24 +243,49 @@ def compute_tier2(sprint_jt: np.ndarray, tier1: np.ndarray,
 
 def compute_stock_metrics(score_arr: np.ndarray, close_arr: np.ndarray,
                           valid_mask: np.ndarray, universe: list[str],
-                          min_days: int = 30) -> dict[str, dict]:
-    """Compute per-stock F1, Acc, AUC using close-to-close direction (matches paper Table 3)."""
+                          min_days: int = 30,
+                          open_arr: np.ndarray | None = None,
+                          label_type: str = "close-to-close") -> dict[str, dict]:
+    """Compute per-stock F1, Acc, AUC.
+
+    Label type options
+    ------------------
+    close-to-close (default, used in paper Table 3):
+        Direction = 1 if today's CLOSE > yesterday's CLOSE.
+        This is the label used for Table 3 in the paper.
+        Note: the paper Abstract mentions 'open-to-close' as the *backtest* signal
+        direction (Table 6/7), not the classification label for Table 3.
+
+    open-to-close (used in backtest Table 6/7):
+        Direction = 1 if today's CLOSE > today's OPEN.
+        This is the intraday direction used for portfolio construction.
+        Requires open_arr to be provided.
+    """
     results = {}
     for j, ticker in enumerate(universe):
         mask = valid_mask[:, j]
         if mask.sum() < min_days:
             continue
-        # close-to-close direction: 1 if today's close > yesterday's close
-        # close_arr has shape (T_full, n); score_arr has shape (T_test, n)
-        # mask is shape (T_test,) — align cc_dir to test window rows
         T_full  = close_arr.shape[0]
         T_test  = score_arr.shape[0]
         close_j = close_arr[:, j]
-        cc_dir_full  = (close_j > np.roll(close_j, 1)).astype(int)
-        cc_dir_full[0] = 0  # undefined on first day
-        # The test rows are the last T_test rows of the full array
-        cc_dir_test = cc_dir_full[T_full - T_test:]
-        yt = cc_dir_test[mask]
+
+        if label_type == "open-to-close":
+            # open-to-close direction: 1 if today's close > today's open
+            # Used in backtest (Table 6/7); requires open_arr
+            if open_arr is None:
+                raise ValueError("open_arr required for label_type='open-to-close'")
+            open_j = open_arr[:, j]
+            oc_dir_full  = (close_j > open_j).astype(int)
+            oc_dir_test  = oc_dir_full[T_full - T_test:]
+            yt = oc_dir_test[mask]
+        else:
+            # close-to-close direction: 1 if today's close > yesterday's close
+            # Used in classification metrics (Table 3); default
+            cc_dir_full  = (close_j > np.roll(close_j, 1)).astype(int)
+            cc_dir_full[0] = 0  # undefined on first day
+            cc_dir_test = cc_dir_full[T_full - T_test:]
+            yt = cc_dir_test[mask]
         ys = (score_arr[mask, j].astype(float) - 50.0) / 50.0  # normalise to [-1,1]
         yp = (ys > 0).astype(int)
         f1  = f1_score(yt, yp, zero_division=0)
@@ -357,11 +384,26 @@ def main():
                         help="Load ALL stocks in CSV (not just Top-54). "
                              "Uses ~362 MB RAM; takes ~60s. "
                              "Results saved to pipeline_results_full.json by default.")
+    parser.add_argument("--test-start",  default=TEST_START,
+                        help="Backtest start date YYYY-MM-DD (default: %(default)s). "
+                             "Paper uses 2024-01-02. Override to reproduce a specific window.")
+    parser.add_argument("--test-end",    default=TEST_END,
+                        help="Backtest end date YYYY-MM-DD (default: %(default)s). "
+                             "Paper uses 2025-06-30 (submission cutoff). "
+                             "Repo default extends to 2026-03-31 (latest available data).")
     args = parser.parse_args()
 
     # Auto-switch output path for full-universe run
     if args.full_universe and args.output == "/tmp/pipeline_results.json":
         args.output = "/tmp/pipeline_results_full.json"
+
+    # Allow CLI override of test window (paper used 2024-01-02 to 2025-06-30)
+    # Repo default extends to 2026-03-31 to include latest available data.
+    # To reproduce paper numbers exactly: --test-start 2024-01-02 --test-end 2025-06-30
+    global TEST_START, TEST_END
+    TEST_START = args.test_start
+    TEST_END   = args.test_end
+    log(f"Test window: {TEST_START} to {TEST_END}")
 
     csv_dir = Path(args.csv_dir)
     kg_dir  = Path(args.kg_dir)

@@ -4,6 +4,19 @@ Stage 1 — Tier-1 Market-Level Nowcast/Forecast (Table 2).
 Loads computed Tier-1 results from the pipeline and displays
 same-day nowcast vs next-day forecast F1/Acc/AUC, with computed vs paper comparison.
 
+Universe sensitivity note
+-------------------------
+Tier-1 market sentiment is computed as a cap-weighted mean over all stocks in the
+scoring universe. The result is sensitive to universe size:
+
+  --tw50 mode (default, Top-54 stocks):  F1 ≈ 0.774  (higher due to noise averaging)
+  --full-universe mode (all 576 stocks): F1 ≈ 0.737  (matches paper Table 2 = 0.7357)
+
+The paper uses the full-universe mode. To reproduce Table 2 exactly:
+
+    python src/compute_from_csv.py --full-universe
+    python src/stage1_market_level.py
+
 CLI:
     python src/stage1_market_level.py
     python src/stage1_market_level.py --verify

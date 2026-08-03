@@ -34,5 +34,18 @@ saves/
 results/
 *.log
 
-# Legacy ablation scripts (superseded by exp/)
-sim/
+# Large data files (too big for git — see data/csv/.gitkeep for layout)
+data/csv/*.csv
+# Keep example and placeholder files
+!data/csv/.gitkeep
+!data/*.example
+# Keep tw50 universe and index (small reference files)
+!data/tw50_universe.csv
+!data/index_taiex.csv
+
+# Cached pipeline results
+/tmp/pipeline_results*.json
+*.bak
+
+# sim/ is the ablation design kit — committed to repo for full reproducibility
+# (Previously excluded; restored in reviewer-fix commit)

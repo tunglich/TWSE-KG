@@ -1,0 +1,9 @@
+# Place your CSV data files here:
+#   Total_score.csv    - Daily sentiment scores (rows=dates, cols=tickers)
+#   TW_sentiment.csv   - Taiwan news sentiment (rows=dates, cols=tickers)
+#   US_sentiment.csv   - US news sentiment (rows=dates, cols=tickers)
+#   Open.csv           - Daily open prices (rows=dates, cols=tickers)
+#   Close.csv          - Daily close prices (rows=dates, cols=tickers)
+#
+# See docs/data_schema.md for full column specifications.
+# These files are not committed to git (see .gitignore) due to size.
