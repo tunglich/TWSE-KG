@@ -17,11 +17,19 @@ The system uses a two-tier sentiment scoring architecture:
 
 ```mermaid
 flowchart LR
-    S1["**Stage 1**\nMarket-Level\nNowcast\n*(Table 2)*"] -->
-    S2["**Stage 2**\nFirm-Level\nKG Prop.\n*(Table 3, 4)*"] -->
-    S3["**Stage 3**\nAblation\nShuffled-Edge Ctrl\n*(§5)*"] -->
-    S4["**Stage 4**\nBacktest\nCost-Adj.\n*(Table 6)*"] -->
-    S5["**Stage 5**\n50-Stock\nF1 & Cov.\n*(§5)*"]
+    S1(["Stage 1\nMarket-Level Nowcast\nTable 2"]) -->
+    S2(["Stage 2\nFirm-Level KG Prop.\nTable 3 & 4"]) -->
+    S3(["Stage 3\nAblation\nShuffled-Edge Ctrl"]) -->
+    S4(["Stage 4\nBacktest\nCost-Adj. · Table 6"]) -->
+    S5(["Stage 5\n50-Stock F1\n& Coverage · §5"])
+
+    style S1 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
+    style S2 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
+    style S3 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
+    style S4 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
+    style S5 fill:#1e3a5f,stroke:#4a90d9,color:#ffffff,rx:8
+
+    linkStyle default stroke:#4a90d9,stroke-width:2px
 ```
 
 ## Repository Structure
