@@ -33,3 +33,6 @@ htmlcov/
 saves/
 results/
 *.log
+
+# Legacy ablation scripts (superseded by exp/)
+sim/
