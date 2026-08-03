@@ -77,17 +77,20 @@ t0 = time.time()
 def log(msg): print(f"[{time.time()-t0:.1f}s] {msg}", flush=True)
 
 
-def load_csv_filtered(csv_path: Path, tickers: list[str],
+def load_csv_filtered(csv_path: Path, tickers: list[str] | None,
                       date_start: str, date_end: str) -> pd.DataFrame:
-    """Read CSV, keep only requested ticker columns and date range."""
+    """Read CSV, keep only requested ticker columns and date range.
+    If tickers is None, load ALL columns (full-universe mode).
+    """
     df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
     # Normalise column names to 4-digit strings
     df.columns = [str(c).strip().zfill(4) if str(c).strip().isdigit() and len(str(c).strip()) <= 4
                   else str(c).strip() for c in df.columns]
-    keep = [t for t in tickers if t in df.columns]
-    df = df[keep]
+    if tickers is not None:
+        keep = [t for t in tickers if t in df.columns]
+        df = df[keep]
     df = df.loc[date_start:date_end]
     return df.astype(float)
 
@@ -348,19 +351,37 @@ def main():
     parser.add_argument("--csv-dir",  default=str(DEFAULT_CSV_DIR))
     parser.add_argument("--kg-dir",   default=str(DEFAULT_KG_DIR))
     parser.add_argument("--tw50",     default=str(DEFAULT_TW50))
-    parser.add_argument("--index",    default=str(DEFAULT_INDEX))
-    parser.add_argument("--output",   default="/tmp/pipeline_results.json")
+    parser.add_argument("--index",         default=str(DEFAULT_INDEX))
+    parser.add_argument("--output",         default="/tmp/pipeline_results.json")
+    parser.add_argument("--full-universe",  action="store_true",
+                        help="Load ALL stocks in CSV (not just Top-54). "
+                             "Uses ~362 MB RAM; takes ~60s. "
+                             "Results saved to pipeline_results_full.json by default.")
     args = parser.parse_args()
+
+    # Auto-switch output path for full-universe run
+    if args.full_universe and args.output == "/tmp/pipeline_results.json":
+        args.output = "/tmp/pipeline_results_full.json"
 
     csv_dir = Path(args.csv_dir)
     kg_dir  = Path(args.kg_dir)
 
-    # ── Load Top-50 list ──────────────────────────────────────────────────────
+    # ── Load Top-50 list ───────────────────────────────────────────────────────────────
     tw50_df = pd.read_csv(args.tw50)
     top50 = [str(t).zfill(4) for t in tw50_df["ticker"].astype(str).str.strip()]
     paper_stocks = ["2330", "2345", "3017", "3711", "6515"]
-    all_target = list(dict.fromkeys(top50 + paper_stocks))
-    log(f"Target stocks: {len(all_target)} (Top-50 + {len(paper_stocks)} paper stocks)")
+
+    if args.full_universe:
+        # Full-universe mode: load ALL tickers from Total_score.csv header
+        log("Full-universe mode: loading ALL stocks from CSV header...")
+        header_df = pd.read_csv(csv_dir / "Total_score.csv", index_col=0, nrows=0)
+        all_cols = [str(c).strip().zfill(4) if str(c).strip().isdigit() and len(str(c).strip()) <= 4
+                    else str(c).strip() for c in header_df.columns]
+        all_target = list(dict.fromkeys(all_cols + top50 + paper_stocks))
+        log(f"Full universe: {len(all_target)} stocks")
+    else:
+        all_target = list(dict.fromkeys(top50 + paper_stocks))
+        log(f"Target stocks: {len(all_target)} (Top-50 + {len(paper_stocks)} paper stocks)")
 
     # ── Load TAIEX index ──────────────────────────────────────────────────────
     idx_df = pd.read_csv(args.index, parse_dates=["日期"], index_col="日期").sort_index()
@@ -377,21 +398,24 @@ def main():
     log(f"Load window: {load_start} to {TEST_END}")
 
     # ── Load CSV sheets ───────────────────────────────────────────────────────
+    # In full-universe mode pass None so ALL columns are loaded
+    _target = None if args.full_universe else all_target
+
     log("Loading Total_score (KG-propagated per-firm score)...")
-    total = load_csv_filtered(csv_dir / "Total_score.csv", all_target, load_start, TEST_END)
+    total = load_csv_filtered(csv_dir / "Total_score.csv", _target, load_start, TEST_END)
     log(f"  shape={total.shape}")
 
     log("Loading TW_sentiment (raw TW per-firm score)...")
-    tw_raw = load_csv_filtered(csv_dir / "TW_sentiment.csv", all_target, load_start, TEST_END)
+    tw_raw = load_csv_filtered(csv_dir / "TW_sentiment.csv", _target, load_start, TEST_END)
 
     log("Loading US_sentiment (raw US per-firm score)...")
-    us_raw = load_csv_filtered(csv_dir / "US_sentiment.csv", all_target, load_start, TEST_END)
+    us_raw = load_csv_filtered(csv_dir / "US_sentiment.csv", _target, load_start, TEST_END)
 
     log("Loading Open prices...")
-    open_df = load_csv_filtered(csv_dir / "Open.csv", all_target, load_start, TEST_END)
+    open_df = load_csv_filtered(csv_dir / "Open.csv", _target, load_start, TEST_END)
 
     log("Loading Close prices...")
-    close_df = load_csv_filtered(csv_dir / "Close.csv", all_target, load_start, TEST_END)
+    close_df = load_csv_filtered(csv_dir / "Close.csv", _target, load_start, TEST_END)
 
     # ── Align all DataFrames ──────────────────────────────────────────────────
     universe = sorted(set(total.columns) & set(tw_raw.columns) & set(us_raw.columns)
