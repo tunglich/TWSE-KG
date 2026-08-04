@@ -1,6 +1,6 @@
 # TWSE-KG
 
-[![Verify Paper Anchors](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml/badge.svg)](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml)
+[![CI](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml/badge.svg)](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml)
 
 A Proprietary Database and Knowledge Graph for Financial News Analysis and Scoring.
 

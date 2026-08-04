@@ -1,4 +1,4 @@
-name: Verify Paper Anchors
+name: CI
 
 on:
   push:
