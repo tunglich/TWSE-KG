@@ -175,11 +175,16 @@ maximum-likelihood cross-entropy on walk-forward training folds.
 For each of the 576 TWSE stocks, Tier 2 combines three intentionally separated
 inputs subject to a simplex constraint:
 
-**(Eq. 7)** $C^{(2)}_{j,t} = a_j \cdot TW_{j,t} + b_j \cdot M_t + c_j \cdot \mathrm{US}_{j,t-1}$, subject to $a_j + b_j + c_j = 1$.
+```
+C_j,t^(2) = a_j · TW_{j,t} + b_j · M_t + c_j · US_{j,t-1}    (Eq. 7)
+            subject to  a_j + b_j + c_j = 1
+```
 
 A firm-specific logistic calibration produces the final score:
 
-**(Eq. 8)** $p_{j,t} = \sigma(a^{(2)}_j + \rho^{(2)}_j C^{(2)}_{j,t})$
+```
+p_{j,t} = σ( a_j^(2) + ρ_j^(2) · C_j,t^(2) )                 (Eq. 8)
+```
 
 **(Eq. 9)** $S_{j,t} = 1 + 99 \cdot p_{j,t} \in [1, 100]$
 
