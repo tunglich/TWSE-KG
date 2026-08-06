@@ -115,9 +115,7 @@ The SprintScore consolidates all direct and KG-propagated, decay-adjusted
 Taiwan event impacts for firm $j$ on date $t$:
 
 ```
-TW_{j,t} = clip[1,100]( 50 + Σ_c  ω_c · (S_c^final − 50) )   (Eq. 3)
-           where c ∈ E_{j,t}  (events before 08:59 Taipei time on day t)
-```
+![Eq. 3](eq3_sprintscore.png)
 
 where $\mathcal{E}_{j,t}$ is the set of events timestamped **before 08:59
 Taipei time** on day $t$, and $\omega_{c,j,t}$ is the normalised
@@ -154,9 +152,7 @@ direction, and ranking before scores enter the U.S. aggregate.
 Tier 1 combines two market-level inputs with a fixed blend weight $\beta = 0.25$:
 
 ```
-C_t^(1) = β · score_local(t) + (1 − β) · US_{t-1}             (Eq. 4)
-          β = 0.25
-```
+![Eq. 4](eq4_tier1_composite.png)
 
 A logistic calibration maps the composite to an up-move probability:
 
