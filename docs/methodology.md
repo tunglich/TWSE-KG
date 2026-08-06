@@ -91,7 +91,9 @@ $$f = \frac{1}{1 + W_{\text{rep}}} \in (0,\,1], \qquad S_{\text{adj}} = 50 + (S_
 The adjusted score is carried forward over the event day plus four following
 trading days using exponential decay:
 
-$$S_{\text{final}} = 50 + \langle \mathbf{d},\, \mathbf{s} \rangle, \qquad d_k = e^{-\lambda_d k},\; s_k = S_{j,k,\text{adj}} - 50,\; \lambda_d = 0.46 \tag{1}$$
+$$S_{\text{final}} = 50 + \sum_{k=0}^{4} w_k \cdot \delta_k \tag{1}$$
+
+where $w_k = e^{-\lambda_d k}$ ($\lambda_d = 0.46$) and $\delta_k = S_{j,k,\text{adj}} - 50$.
 
 Implied carry-over weights for $k = 0, 1, 2, 3, 4$: **100%, 63%, 40%, 25%, 16%**.
 The result is clipped to $[1, 100]$.
