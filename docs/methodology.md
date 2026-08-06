@@ -101,7 +101,10 @@ Implied weights: **100%, 63%, 40%, 25%, 16%**. Result clipped to $[1, 100]$.
 All per-event impact scores are aggregated into a single market-level Taiwan
 feature using **capitalisation-weighted** averaging:
 
-$$\text{score}^{\text{local}}(t) = 50 + \sum_{j} TW_{j,t} \cdot w_j, \quad w_j = \frac{\text{cap}_j}{\sum_{j'} \text{cap}_{j'}} \tag{2}$$
+```
+score_local(t) = 50 + Σ_j  TW_{j,t} · w_j                     (Eq. 2)
+                 where  w_j = cap_j / Σ_{j'} cap_{j'}
+```
 
 This output feeds Tier 1 calibration only; it is **not** used directly as a
 stock-level score.
@@ -111,7 +114,10 @@ stock-level score.
 The SprintScore consolidates all direct and KG-propagated, decay-adjusted
 Taiwan event impacts for firm $j$ on date $t$:
 
-$$TW_{j,t} = \mathrm{clip}_{[1,100]}\!\left(50 + \sum_{c} \omega_c \cdot (S^{\text{final}}_c - 50)\right) \tag{3}$$
+```
+TW_{j,t} = clip[1,100]( 50 + Σ_c  ω_c · (S_c^final − 50) )   (Eq. 3)
+           where c ∈ E_{j,t}  (events before 08:59 Taipei time on day t)
+```
 
 where $\mathcal{E}_{j,t}$ is the set of events timestamped **before 08:59
 Taipei time** on day $t$, and $\omega_{c,j,t}$ is the normalised
