@@ -176,7 +176,7 @@ For each of the 576 TWSE stocks, Tier 2 combines three intentionally separated
 inputs subject to a simplex constraint:
 
 ```
-**(Eq. 7)** $C\_{j,t}^{(2)} = a\_j \cdot TW\_{j,t} + b\_j \cdot M\_t + c\_j \cdot \mathrm{US}\_{j,t-1}$, subject to $a\_j + b\_j + c\_j = 1$.
+**(Eq. 7)** $C\_{j,t}^{(2)} = a\_j \cdot TW\_{j,t} + b\_j \cdot M\_t + c\_j \cdot U\_j$, where $U\_j$ denotes the prior-session U.S. score for firm $j$; subject to $a\_j + b\_j + c\_j = 1$.
 
 A firm-specific logistic calibration produces the final score:
 
