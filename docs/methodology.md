@@ -14,10 +14,10 @@ The pipeline has two parallel sides that merge in the Two-Tier Calibration step.
 
 ![Pipeline](pipeline_ieee.png)
 
-**Taiwan-side signal construction (Stages 1-5)** converts raw Taiwanese and
-U.S. news into per-firm daily sentiment features. **Two-tier predictive
-calibration** maps those features into market- and stock-level scores on
-$[1,100]$.
+**Taiwan-side signal construction** uses Stages $1,\ldots,5$ to convert raw
+Taiwanese and U.S. news into per-firm daily sentiment features. **Two-tier
+predictive calibration** maps those features into market- and stock-level
+scores in the bounded interval $[1,100]$.
 
 ---
 
@@ -76,7 +76,9 @@ $$
 \end{aligned}
 $$
 
-Propagation is limited to $H=2$ hops. Each path contribution is capped:
+Propagation is limited to $H=2$ hops.
+
+**Eq. (2): path-level exposure cap**
 
 $$
 \Delta p_{a\to c}^{\mathrm{capped}}
@@ -86,7 +88,9 @@ $$
 \Delta p_{a\to c},
 -\Delta_{\max},
 +\Delta_{\max}
-\right).
+\right),
+\qquad
+\Delta_{\max}=50 .
 $$
 
 ### Stage 3: Impact Scoring with Decay
@@ -97,7 +101,7 @@ Repeated coverage of the same firm within a 15-trading-day lookback window is
 discounted to prevent headline-stuffing. Let $t_i$ index prior appearances of
 the same firm.
 
-**Eq. (2): cumulative repetition weight**
+**Eq. (3): cumulative repetition weight**
 
 $$
 \begin{aligned}
@@ -107,7 +111,7 @@ W_{\mathrm{rep}}
 \end{aligned}
 $$
 
-**Eq. (3): stale-news discount and adjusted score**
+**Eq. (4): stale-news discount and adjusted score**
 
 $$
 \begin{aligned}
@@ -123,7 +127,7 @@ $$
 The adjusted score is carried forward over the event day plus four following
 trading days using exponential decay.
 
-**Eq. (4): carry-over-adjusted event score**
+**Eq. (5): carry-over-adjusted event score**
 
 $$
 \begin{aligned}
@@ -137,16 +141,30 @@ S_{\mathrm{final}}
 \end{aligned}
 $$
 
-The carry-over window spans $k=0,\ldots,4$ (event day plus four following
-trading days). The implied weights are approximately 100%, 63%, 40%, 25%,
-and 16%. The result is clipped to $[1,100]$.
+The carry-over window is
+
+$$
+k \in \{0,1,2,3,4\},
+$$
+
+where $k=0$ is the event day. The implied decay weights are
+
+$$
+\left\{
+e^{-0.46k}
+\right\}_{k=0}^{4}
+\approx
+\{1.00,0.63,0.40,0.25,0.16\}.
+$$
+
+The result is clipped to $[1,100]$.
 
 ### Stage 4: Aggregation to Daily Market Sentiment
 
 All per-event impact scores are aggregated into a single market-level Taiwan
 feature using capitalization weights.
 
-**Eq. (5): Taiwan local market aggregate**
+**Eq. (6): Taiwan local market aggregate**
 
 $$
 \begin{aligned}
@@ -171,7 +189,7 @@ stock-level score.
 SprintScore consolidates all direct and KG-propagated, decay-adjusted Taiwan
 event impacts for firm $j$ on date $t$.
 
-**Eq. (6): firm-level Taiwan event score**
+**Eq. (7): firm-level Taiwan event score**
 
 $$
 TW_{j,t}
@@ -193,12 +211,16 @@ direct-relevance weight for event $c$ on firm $j$.
 
 ## 3.2 U.S. News Pipeline
 
-The U.S. pipeline runs in parallel and produces:
+The U.S. pipeline runs in parallel and produces prior-session scores:
 
-- a market-level score $\mathrm{US}_{t-1}$; and
-- stock-level scores $\mathrm{US}_{j,t-1}$.
+$$
+\mathrm{US}_{t-1}
+\quad \text{and} \quad
+\mathrm{US}_{j,t-1}.
+$$
 
-Both are based on the prior U.S. cash session.
+The first is the market-level U.S. score and the second is the stock-level
+U.S. score for firm $j$. Both are based on the prior U.S. cash session.
 
 **Stage 1** scores the four U.S. equity indexes (SOX, NDX, SPX, DJI) as the
 cash-session anchor using the same LLM classifier. After-hours items are
@@ -224,7 +246,7 @@ ranking before scores enter the U.S. aggregate.
 Tier 1 combines two market-level inputs with a fixed blend weight
 $\beta=0.25$.
 
-**Eq. (7): Tier-1 composite**
+**Eq. (8): Tier-1 composite**
 
 $$
 C_t^{(1)}
@@ -237,7 +259,7 @@ $$
 
 A logistic calibration maps the composite to an empirical up-move probability.
 
-**Eq. (8): Tier-1 calibrated probability**
+**Eq. (9): Tier-1 calibrated probability**
 
 $$
 p_t
@@ -251,7 +273,7 @@ $$
 
 The market-level score rescales this calibrated probability to $[1,100]$.
 
-**Eq. (9): Tier-1 market score**
+**Eq. (10): Tier-1 market score**
 
 $$
 M_t
@@ -276,7 +298,7 @@ walk-forward training folds.
 For each of the 576 TWSE stocks, Tier 2 combines three intentionally separated
 inputs under a non-negative simplex constraint.
 
-**Eq. (10): Tier-2 stock composite**
+**Eq. (11): Tier-2 stock composite**
 
 $$
 \begin{aligned}
@@ -292,7 +314,7 @@ $$
 
 A firm-specific logistic calibration produces the stock-level probability.
 
-**Eq. (11): Tier-2 calibrated probability**
+**Eq. (12): Tier-2 calibrated probability**
 
 $$
 p_{j,t}
@@ -306,7 +328,7 @@ $$
 
 The final stock score rescales this probability to $[1,100]$.
 
-**Eq. (12): final stock sentiment score**
+**Eq. (13): final stock sentiment score**
 
 $$
 S_{j,t}
@@ -315,7 +337,15 @@ S_{j,t}
 $$
 
 Pool-average source weights are approximately
-$a\approx0.18$, $b\approx0.52$, and $c\approx0.30$.
+
+$$
+\bar{a}\approx0.18,
+\qquad
+\bar{b}\approx0.52,
+\qquad
+\bar{c}\approx0.30 .
+$$
+
 Parameters $(a_j,b_j,c_j)$ and $(\alpha_j^{(2)},\rho_j^{(2)})$ are estimated
 per stock using the same walk-forward cross-entropy criterion.
 
@@ -324,14 +354,35 @@ Figure 2. It is a stock-up probability rescaled to $[1,100]$.
 
 ### Per-Day Decision Flow
 
-On date $t$, the information set $\mathcal{I}_t$ contains all items
-timestamped before 08:59 Taipei time. The scoring sequence is:
+On date $t$, the information set is
 
-1. Taiwan news -> Stages 1-5 -> $TW_{j,t}$ (SprintScore, per firm)
-2. Taiwan news -> Stage 4 -> $\operatorname{score}^{\mathrm{local}}(t)$
-3. U.S. news -> U.S. pipeline -> $\mathrm{US}_{t-1}$ and $\mathrm{US}_{j,t-1}$
-4. $\operatorname{score}^{\mathrm{local}}(t)$ and $\mathrm{US}_{t-1}$ -> Tier 1 -> $M_t$
-5. $TW_{j,t}$, $M_t$, and $\mathrm{US}_{j,t-1}$ -> Tier 2 -> $S_{j,t}$
+$$
+\mathcal{I}_t
+=
+\{\text{news items timestamped before 08:59 Taipei time on day }t\}.
+$$
+
+The per-day scoring sequence is:
+
+$$
+\begin{aligned}
+\mathcal{I}_t^{\mathrm{TW}}
+&\xrightarrow{\mathrm{Stages}\ 1-5}
+TW_{j,t}, \\
+\mathcal{I}_t^{\mathrm{TW}}
+&\xrightarrow{\mathrm{Stage}\ 4}
+\operatorname{score}^{\mathrm{local}}(t), \\
+\mathcal{I}_{t-1}^{\mathrm{US}}
+&\xrightarrow{\mathrm{U.S.\ pipeline}}
+\left(\mathrm{US}_{t-1},\mathrm{US}_{j,t-1}\right), \\
+\left(\operatorname{score}^{\mathrm{local}}(t),\mathrm{US}_{t-1}\right)
+&\xrightarrow{\mathrm{Tier}\ 1}
+M_t, \\
+\left(TW_{j,t},M_t,\mathrm{US}_{j,t-1}\right)
+&\xrightarrow{\mathrm{Tier}\ 2}
+S_{j,t}.
+\end{aligned}
+$$
 
 $S_{j,t}$ is the input feature for downstream trading decisions, including
 long-short portfolio construction and position sizing.
@@ -359,3 +410,4 @@ long-short portfolio construction and position sizing.
 | $w_j^{\mathrm{cap}}$ | Capitalization weight for firm $j$ |
 | $w_{a,c}$ | KG edge exposure weight from anchor $a$ to firm $c$ |
 | $\sigma(\cdot)$ | Logistic sigmoid function |
+
