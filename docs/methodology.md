@@ -83,7 +83,7 @@ Propagation is limited to $H=2$ hops.
 $$
 \Delta p_{a\to c}^{\mathrm{capped}}
 =
-\operatorname{clip}
+\mathrm{clip}
 \left(
 \Delta p_{a\to c},
 -\Delta_{\max},
@@ -168,7 +168,7 @@ feature using capitalization weights.
 
 $$
 \begin{aligned}
-\operatorname{score}^{\mathrm{local}}(t)
+\mathrm{score}^{\mathrm{local}}(t)
 &=
 50
 + \sum_j
@@ -194,7 +194,7 @@ event impacts for firm $j$ on date $t$.
 $$
 TW_{j,t}
 =
-\operatorname{clip}_{[1,100]}
+\mathrm{clip}_{[1,100]}
 \left[
 50
 + \sum_{c\in\mathcal{E}_{j,t}}
@@ -251,7 +251,7 @@ $\beta=0.25$.
 $$
 C_t^{(1)}
 =
-\beta \cdot \operatorname{score}^{\mathrm{local}}(t)
+\beta \cdot \mathrm{score}^{\mathrm{local}}(t)
 + (1-\beta)\cdot \mathrm{US}_{t-1},
 \qquad
 \beta=0.25 .
@@ -371,11 +371,11 @@ $$
 TW_{j,t}, \\
 \mathcal{I}_t^{\mathrm{TW}}
 &\xrightarrow{\mathrm{Stage}\ 4}
-\operatorname{score}^{\mathrm{local}}(t), \\
+\mathrm{score}^{\mathrm{local}}(t), \\
 \mathcal{I}_{t-1}^{\mathrm{US}}
 &\xrightarrow{\mathrm{U.S.\ pipeline}}
 \left(\mathrm{US}_{t-1},\mathrm{US}_{j,t-1}\right), \\
-\left(\operatorname{score}^{\mathrm{local}}(t),\mathrm{US}_{t-1}\right)
+\left(\mathrm{score}^{\mathrm{local}}(t),\mathrm{US}_{t-1}\right)
 &\xrightarrow{\mathrm{Tier}\ 1}
 M_t, \\
 \left(TW_{j,t},M_t,\mathrm{US}_{j,t-1}\right)
@@ -400,7 +400,7 @@ long-short portfolio construction and position sizing.
 | $S_{\mathrm{adj}}$ | Repetition-discounted score |
 | $S_{\mathrm{final}}$ | Carry-over-adjusted final event score |
 | $TW_{j,t}$ | Per-firm SprintScore, the Stage-5 output |
-| $\operatorname{score}^{\mathrm{local}}(t)$ | Capitalization-weighted Taiwan market aggregate |
+| $\mathrm{score}^{\mathrm{local}}(t)$ | Capitalization-weighted Taiwan market aggregate |
 | $\mathrm{US}_{t-1}$ | Prior-session U.S. market-level score |
 | $\mathrm{US}_{j,t-1}$ | Prior-session U.S. stock-level score for firm $j$ |
 | $M_t$ | Tier-1 market-level calibrated score in $[1,100]$ |
