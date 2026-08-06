@@ -91,7 +91,7 @@ $$f = \frac{1}{1 + W_{\text{rep}}} \in (0,\,1], \qquad S_{\text{adj}} = 50 + (S_
 The adjusted score is carried forward over the event day plus four following
 trading days using exponential decay:
 
-$$S_{\text{final}} = 50 + \sum_{k=0}^{4} (S_{j,k,\text{adj}} - 50) \cdot e^{-\lambda_d k}, \qquad \lambda_d = 0.46 \tag{1}$$
+$$S_{\text{final}} = 50 + \sum_{k=0}^{4} d_k \cdot (S_{j,k,\text{adj}} - 50), \quad d_k = e^{-\lambda_d k},\; \lambda_d = 0.46 \tag{1}$$
 
 Implied carry-over weights for $k = 0, 1, 2, 3, 4$: **100%, 63%, 40%, 25%, 16%**.
 The result is clipped to $[1, 100]$.
@@ -101,7 +101,7 @@ The result is clipped to $[1, 100]$.
 All per-event impact scores are aggregated into a single market-level Taiwan
 feature using **capitalisation-weighted** averaging:
 
-$$\text{score}^{\text{local}}(t) = 50 + \sum_{j} \mathrm{TW}_{j,t} \cdot w^{\text{cap}}_{j,t}, \qquad w^{\text{cap}}_{j,t} = \frac{\mathrm{cap}_{j,t}}{\sum_{j'} \mathrm{cap}_{j',t}} \tag{2}$$
+$$\text{score}^{\text{local}}(t) = 50 + \sum_{j} TW_{j,t} \cdot w^{\text{cap}}_{j,t}, \qquad w^{\text{cap}}_{j,t} = \frac{\text{cap}_{j,t}}{\displaystyle\sum_{j'} \text{cap}_{j',t}} \tag{2}$$
 
 This output feeds Tier 1 calibration only; it is **not** used directly as a
 stock-level score.
@@ -111,7 +111,7 @@ stock-level score.
 The SprintScore consolidates all direct and KG-propagated, decay-adjusted
 Taiwan event impacts for firm $j$ on date $t$:
 
-$$TW_{j,t} = \mathrm{clip}_{[1,100]}\!\left(50 + \sum_{c \in \mathcal{E}_{j,t}} \omega_{c,j,t} \cdot (S^{\text{final}}_{c,j,t} - 50)\right) \tag{3}$$
+$$TW_{j,t} = \mathrm{clip}_{[1,100]}\left(50 + \sum_{c \in \mathcal{E}_{j,t}} \omega_{c,j,t} \cdot (S^{\text{final}}_{c,j,t} - 50)\right) \tag{3}$$
 
 where $\mathcal{E}_{j,t}$ is the set of events timestamped **before 08:59
 Taipei time** on day $t$, and $\omega_{c,j,t}$ is the normalised
