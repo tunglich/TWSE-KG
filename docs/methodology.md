@@ -153,7 +153,10 @@ direction, and ranking before scores enter the U.S. aggregate.
 
 Tier 1 combines two market-level inputs with a fixed blend weight $\beta = 0.25$:
 
-$$C^{(1)}_t = \beta \cdot \text{score}^{\text{local}}(t) + (1 - \beta) \cdot \mathrm{US}_{t-1} \tag{4}$$
+```
+C_t^(1) = β · score_local(t) + (1 − β) · US_{t-1}             (Eq. 4)
+          β = 0.25
+```
 
 A logistic calibration maps the composite to an up-move probability:
 
