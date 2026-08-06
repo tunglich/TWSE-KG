@@ -70,7 +70,7 @@ $$\Delta p_{a \to c} = S_{\text{raw}} \cdot w_{a,c} \cdot \gamma^{h}, \qquad \ga
 
 Propagation is limited to $H = 2$ hops.  Each path contribution is capped:
 
-$$\Delta p_{a \to c}^{\text{capped}} = \operatorname{clip}\!\left(\Delta p_{a \to c},\; -\Delta_{\max},\; +\Delta_{\max}\right)$$
+$$\Delta p_{a \to c}^{\text{capped}} = \mathrm{clip}\left(\Delta p_{a \to c},\ {-\Delta_{\max}},\ {+\Delta_{\max}}\right)$$
 
 ### Stage 3 — Impact Scoring with Decay
 
@@ -91,7 +91,7 @@ $$f = \frac{1}{1 + W_{\text{rep}}} \in (0,\,1], \qquad S_{\text{adj}} = 50 + (S_
 The adjusted score is carried forward over the event day plus four following
 trading days using exponential decay:
 
-$$S_{\text{final}} = 50 + \sum_{k=0}^{4} \bigl(S_{j,k,\text{adj}} - 50\bigr)\cdot e^{-\lambda_d k}, \qquad \lambda_d = 0.46 \tag{1}$$
+$$S_{\text{final}} = 50 + \sum_{k=0}^{4} (S_{j,k,\text{adj}} - 50) \cdot e^{-\lambda_d k}, \qquad \lambda_d = 0.46 \tag{1}$$
 
 Implied carry-over weights for $k = 0, 1, 2, 3, 4$: **100%, 63%, 40%, 25%, 16%**.
 The result is clipped to $[1, 100]$.
@@ -101,7 +101,7 @@ The result is clipped to $[1, 100]$.
 All per-event impact scores are aggregated into a single market-level Taiwan
 feature using **capitalisation-weighted** averaging:
 
-$$\text{score}^{\text{local}}(t) = 50 + \sum_{j} \mathrm{TW\_impact}_{j,t} \cdot w^{\text{cap}}_{j,t}, \qquad w^{\text{cap}}_{j,t} = \frac{\text{mkt\_cap}_{j,t}}{\sum_{j'} \text{mkt\_cap}_{j',t}} \tag{2}$$
+$$\text{score}^{\text{local}}(t) = 50 + \sum_{j} \mathrm{TW}_{j,t} \cdot w^{\text{cap}}_{j,t}, \qquad w^{\text{cap}}_{j,t} = \frac{\mathrm{cap}_{j,t}}{\sum_{j'} \mathrm{cap}_{j',t}} \tag{2}$$
 
 This output feeds Tier 1 calibration only; it is **not** used directly as a
 stock-level score.
@@ -111,7 +111,7 @@ stock-level score.
 The SprintScore consolidates all direct and KG-propagated, decay-adjusted
 Taiwan event impacts for firm $j$ on date $t$:
 
-$$TW_{j,t} = \operatorname{clip}_{[1,100]}\!\left(50 + \sum_{c \in \mathcal{E}_{j,t}} \omega_{c,j,t} \cdot \bigl(S^{\text{final}}_{c,j,t} - 50\bigr)\right) \tag{3}$$
+$$TW_{j,t} = \mathrm{clip}_{[1,100]}\!\left(50 + \sum_{c \in \mathcal{E}_{j,t}} \omega_{c,j,t} \cdot (S^{\text{final}}_{c,j,t} - 50)\right) \tag{3}$$
 
 where $\mathcal{E}_{j,t}$ is the set of events timestamped **before 08:59
 Taipei time** on day $t$, and $\omega_{c,j,t}$ is the normalised
@@ -151,11 +151,11 @@ $$C^{(1)}_t = \beta \cdot \text{score}^{\text{local}}(t) + (1 - \beta) \cdot \ma
 
 A logistic calibration maps the composite to an up-move probability:
 
-$$p_t = P\!\left(y_t = 1 \mid C^{(1)}_t\right) = \sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right) \tag{5}$$
+$$p_t = \sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right) \tag{5}$$
 
 The calibrated market-level score is then:
 
-$$M_t = 1 + 99\,\sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right) \in [1,\,100] \tag{6}$$
+$$M_t = 1 + 99 \cdot \sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right) \in [1, 100] \tag{6}$$
 
 Values near 100 indicate strongly bullish market conviction; near 1 bearish;
 50 neutral.  Parameters $a^{(1)}$ and $\rho^{(1)}$ are estimated by
@@ -172,7 +172,7 @@ A firm-specific logistic calibration produces the final score:
 
 $$p_{j,t} = \sigma\!\left(a^{(2)}_j + \rho^{(2)}_j C^{(2)}_{j,t}\right) \tag{8}$$
 
-$$S_{j,t} = 1 + 99\,p_{j,t} \in [1,\,100] \tag{9}$$
+$$S_{j,t} = 1 + 99 \cdot p_{j,t} \in [1, 100] \tag{9}$$
 
 Pool averages: $a \approx 0.18$, $b \approx 0.52$, $c \approx 0.30$.
 Parameters $(a_j, b_j, c_j)$ and $(a^{(2)}_j, \rho^{(2)}_j)$ are estimated
@@ -186,11 +186,11 @@ Figure 2 — a stock-up probability rescaled to $[1, 100]$.
 On date $t$, the information set $\mathcal{I}_t$ contains all items
 timestamped before 08:59 Taipei time.  The scoring sequence is:
 
-1. Taiwan news $\xrightarrow{\text{Stages 1–5}}$ $TW_{j,t}$ (SprintScore, per firm)
-2. Taiwan news $\xrightarrow{\text{Stage 4}}$ $\text{score}^{\text{local}}(t)$ (market aggregate)
-3. U.S. news $\xrightarrow{\text{U.S. pipeline}}$ $\mathrm{US}_{t-1}$, $\mathrm{US}_{j,t-1}$
-4. $\text{score}^{\text{local}}(t) + \mathrm{US}_{t-1}$ $\xrightarrow{\text{Tier 1}}$ $M_t$
-5. $TW_{j,t} + M_t + \mathrm{US}_{j,t-1}$ $\xrightarrow{\text{Tier 2}}$ $S_{j,t}$
+1. Taiwan news → Stages 1–5 → $TW_{j,t}$ (SprintScore, per firm)
+2. Taiwan news → Stage 4 → $\text{score}^{\text{local}}(t)$ (market aggregate)
+3. U.S. news → U.S. pipeline → $\mathrm{US}_{t-1}$, $\mathrm{US}_{j,t-1}$
+4. $\text{score}^{\text{local}}(t)$ + $\mathrm{US}_{t-1}$ → Tier 1 → $M_t$
+5. $TW_{j,t}$ + $M_t$ + $\mathrm{US}_{j,t-1}$ → Tier 2 → $S_{j,t}$
 
 $S_{j,t}$ is the input feature for downstream trading decisions (e.g.
 long–short portfolio construction, position sizing).
