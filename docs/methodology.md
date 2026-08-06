@@ -101,7 +101,7 @@ Implied weights: **100%, 63%, 40%, 25%, 16%**. Result clipped to $[1, 100]$.
 All per-event impact scores are aggregated into a single market-level Taiwan
 feature using **capitalisation-weighted** averaging:
 
-$$\text{score}^{\text{local}}(t) = 50 + \sum_{j} TW_{j,t} \cdot w^{\text{cap}}_{j,t}, \qquad w^{\text{cap}}_{j,t} = \frac{\text{cap}_{j,t}}{\displaystyle\sum_{j'} \text{cap}_{j',t}} \tag{2}$$
+**(Eq. 2)** $\text{score}^{\text{local}}(t) = 50 + \sum_{j} TW_{j,t} \cdot w^{\text{cap}}_{j,t}$, where $w^{\text{cap}}_{j,t} = \text{cap}_{j,t} / \sum_{j'} \text{cap}_{j',t}$.
 
 This output feeds Tier 1 calibration only; it is **not** used directly as a
 stock-level score.
@@ -111,7 +111,7 @@ stock-level score.
 The SprintScore consolidates all direct and KG-propagated, decay-adjusted
 Taiwan event impacts for firm $j$ on date $t$:
 
-$$TW_{j,t} = \mathrm{clip}_{[1,100]}\left(50 + \sum_{c \in \mathcal{E}_{j,t}} \omega_{c,j,t} \cdot (S^{\text{final}}_{c,j,t} - 50)\right) \tag{3}$$
+**(Eq. 3)** $TW_{j,t} = \mathrm{clip}_{[1,100]}\!\left(50 + \sum_{c \in \mathcal{E}_{j,t}} \omega_{c,j,t} \cdot (S^{\text{final}}_{c,j,t} - 50)\right)$
 
 where $\mathcal{E}_{j,t}$ is the set of events timestamped **before 08:59
 Taipei time** on day $t$, and $\omega_{c,j,t}$ is the normalised
@@ -151,11 +151,11 @@ $$C^{(1)}_t = \beta \cdot \text{score}^{\text{local}}(t) + (1 - \beta) \cdot \ma
 
 A logistic calibration maps the composite to an up-move probability:
 
-$$p_t = \sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right) \tag{5}$$
+**(Eq. 5)** $p_t = \sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right)$
 
 The calibrated market-level score is then:
 
-$$M_t = 1 + 99 \cdot \sigma\!\left(a^{(1)} + \rho^{(1)} C^{(1)}_t\right) \in [1, 100] \tag{6}$$
+**(Eq. 6)** $M_t = 1 + 99 \cdot \sigma(a^{(1)} + \rho^{(1)} C^{(1)}_t) \in [1, 100]$
 
 Values near 100 indicate strongly bullish market conviction; near 1 bearish;
 50 neutral.  Parameters $a^{(1)}$ and $\rho^{(1)}$ are estimated by
@@ -166,13 +166,13 @@ maximum-likelihood cross-entropy on walk-forward training folds.
 For each of the 576 TWSE stocks, Tier 2 combines three intentionally separated
 inputs subject to a simplex constraint:
 
-$$C^{(2)}_{j,t} = a_j \cdot TW_{j,t} + b_j \cdot M_t + c_j \cdot \mathrm{US}_{j,t-1}, \qquad a_j + b_j + c_j = 1 \tag{7}$$
+**(Eq. 7)** $C^{(2)}_{j,t} = a_j \cdot TW_{j,t} + b_j \cdot M_t + c_j \cdot \mathrm{US}_{j,t-1}$, subject to $a_j + b_j + c_j = 1$.
 
 A firm-specific logistic calibration produces the final score:
 
-$$p_{j,t} = \sigma\!\left(a^{(2)}_j + \rho^{(2)}_j C^{(2)}_{j,t}\right) \tag{8}$$
+**(Eq. 8)** $p_{j,t} = \sigma(a^{(2)}_j + \rho^{(2)}_j C^{(2)}_{j,t})$
 
-$$S_{j,t} = 1 + 99 \cdot p_{j,t} \in [1, 100] \tag{9}$$
+**(Eq. 9)** $S_{j,t} = 1 + 99 \cdot p_{j,t} \in [1, 100]$
 
 Pool averages: $a \approx 0.18$, $b \approx 0.52$, $c \approx 0.30$.
 Parameters $(a_j, b_j, c_j)$ and $(a^{(2)}_j, \rho^{(2)}_j)$ are estimated
