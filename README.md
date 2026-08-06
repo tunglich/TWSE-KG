@@ -17,6 +17,9 @@ The system uses a two-tier sentiment scoring architecture:
 
 ![Pipeline](docs/pipeline_ieee.png)
 
+For the complete mathematical specification (Equations 1–9, parameter table,
+notation summary), see [`docs/methodology.md`](docs/methodology.md).
+
 ## Repository Structure
 
 ```
