@@ -101,7 +101,7 @@ Implied weights: **100%, 63%, 40%, 25%, 16%**. Result clipped to $[1, 100]$.
 All per-event impact scores are aggregated into a single market-level Taiwan
 feature using **capitalisation-weighted** averaging:
 
-**(Eq. 2)** $\text{score}^{\text{local}}(t) = 50 + \sum_j TW_j \cdot w_j$, where $w_j = \text{cap}_j / \sum_{j'} \text{cap}_{j'}$.
+**(Eq. 2)** $\text{score}^{\text{local}}(t) = 50 + \sum_j TW\_j \cdot w\_j$, where $w\_j = \mathrm{cap}\_j \,/\, \sum_{j'} \mathrm{cap}\_{j'}$.
 
 This output feeds Tier 1 calibration only; it is **not** used directly as a
 stock-level score.
