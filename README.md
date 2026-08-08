@@ -15,20 +15,42 @@ The system uses a two-tier sentiment scoring architecture:
 
 ## Web Application
 
-The following screenshots show the anonymised web application built on top of this pipeline.
-All pages are accessible without login and contain no author-identifying information.
+The following screenshots illustrate the anonymised web application built on top of this pipeline.
+All pages are publicly accessible without login and contain no author-identifying information.
 
-| Home — Search Interface | Supply Chain Analysis (TSMC) |
-|:---:|:---:|
-| ![Home](docs/screenshots/screenshot_home.png) | ![Analysis](docs/screenshots/screenshot_analysis.png) |
-
-| Knowledge Graph (2-hop, 107 nodes) | News Sentiment + K-Line Chart |
-|:---:|:---:|
-| ![Knowledge Graph](docs/screenshots/screenshot_kg.png) | ![News Sentiment](docs/screenshots/screenshot_news_sentiment.png) |
-
-| Long-Short Sentiment Backtest (Strategy) |
-|:---:|
-| ![Strategy](docs/screenshots/screenshot_strategy.png) |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/screenshot_home.png" alt="Home" width="100%"/>
+      <br/>
+      <sub><b>Fig. A.</b> Home page — full-text company search across 576 TWSE-listed companies with supply-chain statistics summary.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/screenshot_analysis.png" alt="Analysis" width="100%"/>
+      <br/>
+      <sub><b>Fig. B.</b> Supply Chain Analysis (TSMC, 2330) — downstream customer revenue-share bar chart and ranked customer table.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/screenshot_kg.png" alt="Knowledge Graph" width="100%"/>
+      <br/>
+      <sub><b>Fig. C.</b> Supply Chain Knowledge Graph — interactive force-directed graph with 2-hop propagation (107 nodes, 120 edges for TSMC).</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/screenshot_news_sentiment.png" alt="News Sentiment" width="100%"/>
+      <br/>
+      <sub><b>Fig. D.</b> News Sentiment Analysis — daily Tier-2 sentiment score overlaid on OHLCV K-line chart (TSMC, 2330, 1-year window).</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/screenshots/screenshot_strategy.png" alt="Strategy" width="50%"/>
+      <br/>
+      <sub><b>Fig. E.</b> Long-Short Sentiment Backtest — configurable quintile-based long-short strategy with commission, slippage, and date-range controls.</sub>
+    </td>
+  </tr>
+</table>
 
 ## Pipeline
 
