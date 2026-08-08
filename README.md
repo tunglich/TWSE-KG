@@ -13,6 +13,23 @@ The system uses a two-tier sentiment scoring architecture:
 - **Tier-1 (Market-Level):** Cross-market (TW+US) aggregate nowcast/forecast
 - **Tier-2 (Firm-Level):** Knowledge-graph-propagated firm-specific sentiment with typed edges, exposure weights, and two-hop propagation
 
+## Web Application
+
+The following screenshots show the anonymised web application built on top of this pipeline.
+All pages are accessible without login and contain no author-identifying information.
+
+| Home — Search Interface | Supply Chain Analysis (TSMC) |
+|:---:|:---:|
+| ![Home](docs/screenshots/screenshot_home.png) | ![Analysis](docs/screenshots/screenshot_analysis.png) |
+
+| Knowledge Graph (2-hop, 107 nodes) | News Sentiment + K-Line Chart |
+|:---:|:---:|
+| ![Knowledge Graph](docs/screenshots/screenshot_kg.png) | ![News Sentiment](docs/screenshots/screenshot_news_sentiment.png) |
+
+| Long-Short Sentiment Backtest (Strategy) |
+|:---:|
+| ![Strategy](docs/screenshots/screenshot_strategy.png) |
+
 ## Pipeline
 
 ![Pipeline](docs/pipeline_ieee.png)
