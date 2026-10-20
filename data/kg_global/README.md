@@ -9,7 +9,7 @@ curated supplier / customer / competitor / investment profiles. **It is not used
 
 | File | Rows | Description |
 |---|---|---|
-| `nodes.csv` | 5,500 | One row per company page (`key`, display `name` = 「Chinese (English, ticker)」, `industry`, `is_tw_listed`) |
+| `nodes.csv` | 5,500 | One row per company page (`key`, display `name` = "Chinese (English, ticker)", `industry`, `is_tw_listed`) |
 | `supplies_to.csv` | 66,351 | Supplier → customer edges; 53,575 have both ends resolved to a node `key` |
 | `competes_with.csv` | 5,272 | Named competitor pairs (with the battlefield when known) |
 | `investments.csv` | 8,054 | Parent → investee (subsidiary / affiliate) with ownership %; 630 investees resolved to a node |
@@ -29,4 +29,4 @@ curated supplier / customer / competitor / investment profiles. **It is not used
 
 - Revenue / procurement shares are mostly estimates and should be read as relative magnitudes.
 - The same company may appear under several spellings in source profiles; they are merged into a single node
-  (e.g. `NVDA` = Nvidia = 輝達). Display names follow the convention 「Taiwanese common Chinese name (English, ticker)」.
+  (e.g. `NVDA` = Nvidia = its Chinese name). Display names follow the convention "Taiwanese common Chinese name (English, ticker)".

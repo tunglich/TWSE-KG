@@ -1,9 +1,9 @@
 """
-視覺化：全量模式 vs Top-54 模式在 Tier-1 市場級分類的差異
-生成三張圖：
-  1. F1 / Acc / AUC 三指標橫向比較（含論文值）
-  2. 市場情緒信號時序圖（Top-54 vs 全量 vs TAIEX 實際方向）
-  3. 每日預測正確率滾動平均（30日）
+Visualisation: full-universe vs Top-54 mode for Tier-1 market-level classification.
+Produces three figures:
+  1. F1 / Acc / AUC side-by-side comparison (with paper values)
+  2. Market sentiment signal time series (Top-54 vs full-universe vs actual TAIEX direction)
+  3. 30-day rolling average of daily prediction accuracy
 """
 from __future__ import annotations
 import json, sys, time, warnings
@@ -23,21 +23,21 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-# ── 載入兩份結果 ──────────────────────────────────────────────────────────
+# ── Load both result files ──────────────────────────────────────────────────────────
 top54 = json.load(open("/tmp/pipeline_results.json"))
 full  = json.load(open("/tmp/pipeline_results_full.json"))
 
-# ── 論文值 ────────────────────────────────────────────────────────────────
+# ── Paper values ────────────────────────────────────────────────────────────────
 PAPER = {"f1": 0.7357, "acc": 0.6813, "auc": 0.7170}
 
-# ── 顏色設定 ──────────────────────────────────────────────────────────────
-C_TOP54  = "#4C72B0"   # 藍
-C_FULL   = "#DD8452"   # 橙
-C_PAPER  = "#55A868"   # 綠
-C_TAIEX  = "#C44E52"   # 紅
+# ── Colours ──────────────────────────────────────────────────────────────
+C_TOP54  = "#4C72B0"   # blue
+C_FULL   = "#DD8452"   # orange
+C_PAPER  = "#55A868"   # green
+C_TAIEX  = "#C44E52"   # red
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 圖 1：三指標橫向比較（grouped bar）
+# Figure 1: three-metric comparison (grouped bar)
 # ═══════════════════════════════════════════════════════════════════════════
 fig1, ax = plt.subplots(figsize=(10, 5.5))
 fig1.patch.set_facecolor("#F8F9FA")
@@ -59,7 +59,7 @@ bars1 = ax.bar(x - width,     vals_54,    width, label=f"Top-54 mode",  color=C_
 bars2 = ax.bar(x,             vals_full,  width, label=f"Full-universe (1,878 stocks)", color=C_FULL,  alpha=0.88, zorder=3)
 bars3 = ax.bar(x + width,     vals_paper, width, label="Paper (ICAIF 2026)", color=C_PAPER, alpha=0.88, zorder=3)
 
-# 數值標籤
+# Value labels
 for bars in [bars1, bars2, bars3]:
     for bar in bars:
         h = bar.get_height()
@@ -76,9 +76,9 @@ ax.legend(fontsize=10, loc="upper left")
 ax.grid(axis="y", alpha=0.4, zorder=0)
 ax.spines[["top","right"]].set_visible(False)
 
-# 差異標注箭頭（F1）
+# Difference annotation arrow (F1)
 delta_f1 = vals_full[0] - vals_54[0]
-ax.annotate(f"Δ={delta_f1:+.4f}\n(全量更接近論文)",
+ax.annotate(f"Δ={delta_f1:+.4f}\n(full-universe closer to paper)",
             xy=(x[0], vals_full[0] + 0.012),
             xytext=(x[0] + 0.55, vals_full[0] + 0.055),
             arrowprops=dict(arrowstyle="->", color="#333", lw=1.2),
@@ -91,7 +91,7 @@ fig1.savefig(out1, dpi=150, bbox_inches="tight")
 print(f"  Saved: {out1}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 重新計算時序資料（需要跑 pipeline）
+# Recompute time-series data (requires the pipeline)
 # ═══════════════════════════════════════════════════════════════════════════
 import pandas as pd
 from sklearn.metrics import f1_score
@@ -121,15 +121,15 @@ total_full = load_csv(DEFAULT_CSV_DIR / "Total_score.csv", None,  TEST_START, TE
 us_54      = load_csv(DEFAULT_CSV_DIR / "US_sentiment.csv", top50, TEST_START, TEST_END)
 us_full    = load_csv(DEFAULT_CSV_DIR / "US_sentiment.csv", None,  TEST_START, TEST_END)
 
-idx_df = pd.read_csv(DEFAULT_INDEX, parse_dates=["日期"], index_col="日期").sort_index()
+idx_df = pd.read_csv(DEFAULT_INDEX, parse_dates=[0], index_col=0).sort_index()
 taiex  = idx_df["TWA00"].astype(float).loc[TEST_START:TEST_END]
 taiex_dir = (taiex.diff() > 0).astype(int)
 
-# 計算 Tier-1 信號
+# Compute Tier-1 signal
 top50_j_54   = [i for i, c in enumerate(total_54.columns)   if c in top50]
 top50_j_full = [i for i, c in enumerate(total_full.columns) if c in top50]
 
-# 對齊所有 DataFrame 的日期
+# Align dates across all DataFrames
 common_dates = total_54.index.intersection(us_54.index).intersection(total_full.index).intersection(us_full.index)
 total_54   = total_54.reindex(common_dates)
 total_full = total_full.reindex(common_dates)
@@ -145,7 +145,7 @@ tw_mkt_full = np.nanmean(total_full.values[:, top50_j_full], axis=1)
 us_mkt_54   = np.nanmean(us_54.values,   axis=1)
 us_mkt_full = np.nanmean(us_full.values, axis=1)
 
-# 填補 NaN
+# Fill NaN
 us_mkt_54   = np.where(np.isnan(us_mkt_54),   50.0, us_mkt_54)
 us_mkt_full = np.where(np.isnan(us_mkt_full), 50.0, us_mkt_full)
 
@@ -154,7 +154,7 @@ tier1_full = BETA * tw_mkt_full + (1 - BETA) * us_mkt_full
 
 dates = pd.to_datetime(common_dates)
 
-# 對齊 TAIEX
+# Align with TAIEX
 common = dates[dates.isin(taiex_dir.index)]
 t1_54_s   = pd.Series(tier1_54,   index=dates).reindex(common)
 t1_full_s = pd.Series(tier1_full, index=dates).reindex(common)
@@ -163,22 +163,22 @@ taiex_s   = taiex_dir.reindex(common)
 pred_54   = (t1_54_s   > 50).astype(int)
 pred_full = (t1_full_s > 50).astype(int)
 
-# 每日正確率（1=正確，0=錯誤）
+# Daily correctness (1 = correct, 0 = wrong)
 correct_54   = (pred_54   == taiex_s).astype(float)
 correct_full = (pred_full == taiex_s).astype(float)
 
-# 30 日滾動 F1（用 rolling accuracy 近似）
+# 30-day rolling F1 (approximated by rolling accuracy)
 roll_acc_54   = correct_54.rolling(30,   min_periods=15).mean()
 roll_acc_full = correct_full.rolling(30, min_periods=15).mean()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 圖 2：市場情緒信號時序 + 滾動準確率
+# Figure 2: market sentiment signal time series + rolling accuracy
 # ═══════════════════════════════════════════════════════════════════════════
 fig2 = plt.figure(figsize=(14, 9))
 fig2.patch.set_facecolor("#F8F9FA")
 gs = GridSpec(3, 1, figure=fig2, hspace=0.45)
 
-# 上圖：Tier-1 信號值
+# Top panel: Tier-1 signal
 ax1 = fig2.add_subplot(gs[0])
 ax1.set_facecolor("#F8F9FA")
 ax1.plot(common, t1_54_s,   color=C_TOP54, lw=1.2, alpha=0.85, label="Top-54 Tier-1 signal")
@@ -190,7 +190,7 @@ ax1.set_title("Tier-1 Market Sentiment Signal: Top-54 vs Full-Universe", fontsiz
 ax1.legend(fontsize=8.5, loc="upper right", ncol=2)
 ax1.grid(alpha=0.3); ax1.spines[["top","right"]].set_visible(False)
 
-# 中圖：TAIEX 實際漲跌
+# Middle panel: actual TAIEX return
 ax2 = fig2.add_subplot(gs[1])
 ax2.set_facecolor("#F8F9FA")
 taiex_ret = taiex.pct_change().reindex(common) * 100
@@ -200,7 +200,7 @@ ax2.set_ylabel("TAIEX Return (%)", fontsize=10)
 ax2.set_title("TAIEX Daily Return (Ground Truth)", fontsize=11, fontweight="bold")
 ax2.legend(fontsize=8.5); ax2.grid(alpha=0.3); ax2.spines[["top","right"]].set_visible(False)
 
-# 下圖：30日滾動準確率
+# Bottom panel: 30-day rolling accuracy
 ax3 = fig2.add_subplot(gs[2])
 ax3.set_facecolor("#F8F9FA")
 ax3.plot(common, roll_acc_54   * 100, color=C_TOP54, lw=1.5, label=f"Top-54  (overall acc={correct_54.mean()*100:.1f}%)")
@@ -224,12 +224,12 @@ fig2.savefig(out2, dpi=150, bbox_inches="tight")
 print(f"  Saved: {out2}")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 圖 3：信號差異分佈（histogram）
+# Figure 3: signal difference distribution (histogram)
 # ═══════════════════════════════════════════════════════════════════════════
 fig3, axes = plt.subplots(1, 2, figsize=(12, 5))
 fig3.patch.set_facecolor("#F8F9FA")
 
-# 左：信號差異分佈
+# Left: signal difference distribution
 diff = (t1_full_s - t1_54_s).dropna()
 ax = axes[0]
 ax.set_facecolor("#F8F9FA")
@@ -241,7 +241,7 @@ ax.set_ylabel("Count (days)", fontsize=10)
 ax.set_title("Distribution of Signal Difference\n(Full-universe − Top-54)", fontsize=11, fontweight="bold")
 ax.legend(fontsize=9); ax.grid(alpha=0.3); ax.spines[["top","right"]].set_visible(False)
 
-# 右：月度準確率對比
+# Right: monthly accuracy comparison
 monthly_acc_54   = correct_54.resample("ME").mean() * 100
 monthly_acc_full = correct_full.resample("ME").mean() * 100
 months = monthly_acc_54.index

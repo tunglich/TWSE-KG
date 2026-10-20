@@ -23,6 +23,24 @@ The KG snapshot used in the paper (September 30, 2026) contains 8,127 nodes — 
 40,237 de-duplicated edges (30,942 supplier–customer, 3,704 competitor, 5,591 investee) spanning Taiwan, the United States,
 Greater China, Japan, Korea and Europe.
 
+## Knowledge Graph Statistics
+
+| | Paper snapshot<br>(Sep 30, 2026; Table 1(b)) | `data/kg/`<br>Taiwan propagation KG | `data/kg_global/`<br>Multi-market KG |
+|---|---:|---:|---:|
+| Company nodes | 8,127 | 4,792 | 5,500 |
+| &nbsp;&nbsp;of which Taiwan-listed | 1,179 | 1,105 | 1,159 |
+| &nbsp;&nbsp;of which other (overseas / unlisted / themes) | 6,948 | 3,687 | 4,341 |
+| Supplier → customer edges | 30,942 | 7,377 | 66,351 |
+| &nbsp;&nbsp;with both ends resolved to a node | — | 7,377 | 53,575 |
+| Competitor edges | 3,704 | 1,725 | 5,272 |
+| Investor → investee edges | 5,591 | — | 8,054 |
+| **Total edges** | **40,237** | **9,102** | **79,677** |
+| Used by the paper's experiments | ✓ | ✓ (propagation input) | — (web application only) |
+
+The paper snapshot counts de-duplicated edges after entity resolution; the released `data/kg_global/` files keep one row per
+source-profile entry (supplier lists and customer lists both contribute), so their raw row counts are larger.
+See [`data/kg/README.md`](data/kg/README.md) and [`data/kg_global/README.md`](data/kg_global/README.md) for schemas.
+
 ## Web Application
 
 The following screenshots illustrate the web application built on top of this pipeline. All pages are publicly accessible without login.

@@ -424,7 +424,7 @@ def main():
         log(f"Target stocks: {len(all_target)} (Top-50 + {len(paper_stocks)} paper stocks)")
 
     # ── Load TAIEX index ──────────────────────────────────────────────────────
-    idx_df = pd.read_csv(args.index, parse_dates=["日期"], index_col="日期").sort_index()
+    idx_df = pd.read_csv(args.index, parse_dates=[0], index_col=0).sort_index()
     taiex_close = idx_df["TWA00"].astype(float)
     taiex_dir   = (taiex_close.diff() > 0).astype(float)
 
