@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml/badge.svg)](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml)
 
-A Proprietary Database and Knowledge Graph for Financial News Analysis and Scoring.
+An Open-Source Database and Knowledge Graph for Financial News Analysis and Scoring.
 
 ## Overview
 
@@ -91,7 +91,7 @@ notation summary), see [`docs/methodology.md`](docs/methodology.md).
 ```
 TWSE-KG/
 ├── README.md
-├── LICENSE                     # Proprietary license
+├── LICENSE                     # MIT License
 ├── Makefile                    # Pipeline orchestration (make all / verify / smoke)
 ├── requirements.txt            # Python dependencies
 ├── smoke_test.py               # Quick sanity check (< 5s)
@@ -201,4 +201,4 @@ pre-scored CSV cache in `data/csv/`, which is not distributed.
 
 ## License
 
-Code and data: proprietary, all rights reserved (see `LICENSE`). The paper itself is published under CC BY 4.0.
+Code and data: open source under the [MIT License](LICENSE). The paper itself is published under CC BY 4.0.

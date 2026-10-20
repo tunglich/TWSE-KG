@@ -566,4 +566,4 @@ If you use this code or data in your research, please cite:
 
 ## 15. License
 
-Code and data: proprietary, all rights reserved — see [`LICENSE`](../LICENSE). The paper is published under CC BY 4.0.
+Code and data: open source under the MIT License — see [`LICENSE`](../LICENSE). The paper is published under CC BY 4.0.

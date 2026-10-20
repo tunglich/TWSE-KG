@@ -52,7 +52,7 @@ cross-source near-duplicate reports of the same event. The LLM assigns:
 
 ### Stage 2 — KG Supply-Chain Impact Propagation
 
-The proprietary firm-level knowledge graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$
+The firm-level knowledge graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$
 covers 1,179 TWSE/TPEx-listed firms plus overseas anchor nodes (suppliers, customers,
 competitors, investees); the September 30, 2026 snapshot has 8,127 nodes and 40,237
 de-duplicated edges. Each directed edge $e = (a, c) \in \mathcal{E}$ carries an
