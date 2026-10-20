@@ -6,9 +6,9 @@ This directory contains the complete Knowledge Graph (KG) data exported from the
 
 | File | Rows | Description |
 |------|------|-------------|
-| `companies.csv` | 4,512 | Company nodes with ticker, name, and centrality metrics |
-| `supplies_to.csv` | 5,509 | `SUPPLIES_TO` edges (supplier → customer) |
-| `competes_with.csv` | 3,246 | `COMPETES_WITH` edges (peer competition) |
+| `companies.csv` | 4,792 | Company nodes with ticker, name, and centrality metrics |
+| `supplies_to.csv` | 7,377 | `SUPPLIES_TO` edges (supplier → customer) |
+| `competes_with.csv` | 1,725 | `COMPETES_WITH` edges (peer competition) |
 
 ## Schema
 
@@ -46,13 +46,13 @@ This directory contains the complete Knowledge Graph (KG) data exported from the
 
 ## Statistics
 
-- **Total nodes**: 4,512 companies
-- **SUPPLIES_TO edges**: 5,509 (directed, supplier → customer)
-- **COMPETES_WITH edges**: 3,246 (undirected, stored as directed pairs)
-- **Mean out-degree (SUPPLIES_TO)**: ~2.4 per company
+- **Total nodes**: 4,792 companies (1,105 with `is_twse_listed = 1`)
+- **SUPPLIES_TO edges**: 7,377 (directed, supplier → customer)
+- **COMPETES_WITH edges**: 1,725 (undirected, stored as directed pairs)
+- **Mean out-degree (SUPPLIES_TO)**: ~4.6 per supplier
 - **Coverage**: 33 industry sectors
 
-## Node Universe: 576 TWSE vs 4,512 Total
+## Node Universe in the paper snapshot: 576 TWSE vs 4,512 Total
 
 The paper reports **576 Taiwan-listed companies** as the scoring universe. The KG contains **4,512 nodes** in total. This discrepancy is intentional and reflects the graph propagation design:
 
@@ -65,6 +65,20 @@ The paper reports **576 Taiwan-listed companies** as the scoring universe. The K
 Overseas anchors include companies such as ASML, Apple, NVIDIA, Samsung, and CATL. When a US company (e.g. Apple) has a strong earnings day, the sentiment propagates through `SUPPLIES_TO` edges to its Taiwanese suppliers (e.g. Hon Hai, Largan). The `is_twse_listed` column in `companies.csv` distinguishes the two groups.
 
 The `companies.csv` schema includes an `is_twse_listed` flag (1 = TWSE/OTC listed, 0 = overseas anchor). The pipeline's `--tw50` and `--full-universe` modes both restrict **scoring** to TWSE-listed nodes; overseas nodes are used only as propagation sources.
+
+## Version note (updated 2026-10-20)
+
+The files in this directory were refreshed on 2026-10-20 with the current production KG:
+
+| | Paper snapshot (commit `720561f`) | 2026-10-20 |
+|---|---|---|
+| Nodes | 4,512 | 4,792 (+280 Taiwan-listed companies that gained edges) |
+| `SUPPLIES_TO` | 5,509 | 7,377 (new edges from company disclosures, filings and analyst reports; directions re-verified) |
+| `COMPETES_WITH` | 3,246 | 1,725 (generic "same-industry" pairs removed; only named head-to-head competitors kept) |
+
+- Edges whose counterparty has no Taiwan ticker (overseas companies) are not in these three files; see `data/kg_global/` for the full multi-market graph.
+- Centrality columns (`pagerank`, `betweenness`, `theme_*`) are from the paper snapshot and are blank for the 280 newly added nodes.
+- The paper's reported results are reproduced from the cached scores in `data/Sentiment_score_all.xlsx` (`python run_experiments.py --verify` still passes). To use the exact KG of the paper, check out commit `720561f`.
 
 ## Rebuilding the Neo4j Database
 

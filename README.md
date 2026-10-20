@@ -85,7 +85,9 @@ TWSE-KG/
 │   ├── export_xlsx.py          #   Regenerate Sentiment_score_all.xlsx
 │   └── run_ablation_kit.py     #   Run ablation kit selftests
 ├── data/
-│   └── Sentiment_score_all.xlsx  # All experimental data (7 sheets)
+│   ├── Sentiment_score_all.xlsx  # All experimental data (7 sheets)
+│   ├── kg/                       # Taiwan propagation KG used by the pipeline (refreshed 2026-10-20; see kg/README.md)
+│   └── kg_global/                # Multi-market supply-chain KG behind the web app (5,500 companies; not used by the experiments)
 ├── docs/
 │   └── data_schema.md          # Data dictionary for xlsx sheets
 └── exp/                        # Ablation kit (shuffled-edge control)
