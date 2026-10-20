@@ -64,14 +64,14 @@ SALES_TAX  = 0.003      # 0.30% on sells
 BORROW_FEE = 0.02 / 252 # 2% annual borrow fee on shorts, daily
 QUINTILE_N = 10         # top/bottom quintile size (10 from 50 = Q1/Q5)
 TEST_START = "2024-01-02"
-TEST_END   = "2026-03-31"
+TEST_END   = "2026-09-30"   # final paper held-out window: 2024-01-02 ~ 2026-09-30 (2024–2026Q3)
 WARMUP     = 20         # extra days before test start for decay warmup
 
 # Paper anchor values for comparison
 PAPER = {
     "t2_f1": 0.7357, "t2_acc": 0.6813, "t2_auc": 0.7170,
-    "t3_f1": 0.6456, "t3_acc": 0.6460, "t3_auc": 0.6534,
-    "t6_ls_ret": 0.146, "t6_ls_sharpe": 1.12, "t6_ls_maxdd": 0.096,
+    "t3_f1": 0.6524, "t3_acc": 0.6510, "t3_auc": 0.6590,      # final paper (2024–2026Q3)
+    "t6_ls_ret": 0.154, "t6_ls_sharpe": 1.18, "t6_ls_maxdd": 0.094,
     "t6_taiex_ret": 0.340, "t6_taiex_sharpe": 1.38,
 }
 
@@ -374,6 +374,7 @@ def run_backtest(tier2_scores: np.ndarray, open_arr: np.ndarray,
 
 
 def main():
+    global TEST_START, TEST_END   # must precede first use (argparse defaults below read them)
     parser = argparse.ArgumentParser(description="TWSE-KG pipeline from CSV")
     parser.add_argument("--csv-dir",  default=str(DEFAULT_CSV_DIR))
     parser.add_argument("--kg-dir",   default=str(DEFAULT_KG_DIR))
@@ -389,18 +390,15 @@ def main():
                              "Paper uses 2024-01-02. Override to reproduce a specific window.")
     parser.add_argument("--test-end",    default=TEST_END,
                         help="Backtest end date YYYY-MM-DD (default: %(default)s). "
-                             "Paper uses 2025-06-30 (submission cutoff). "
-                             "Repo default extends to 2026-03-31 (latest available data).")
+                             "Final paper uses 2026-09-30 (submitted version used 2025-06-30).")
     args = parser.parse_args()
 
     # Auto-switch output path for full-universe run
     if args.full_universe and args.output == "/tmp/pipeline_results.json":
         args.output = "/tmp/pipeline_results_full.json"
 
-    # Allow CLI override of test window (paper used 2024-01-02 to 2025-06-30)
-    # Repo default extends to 2026-03-31 to include latest available data.
-    # To reproduce paper numbers exactly: --test-start 2024-01-02 --test-end 2025-06-30
-    global TEST_START, TEST_END
+    # Allow CLI override of test window.
+    # Final paper window: --test-start 2024-01-02 --test-end 2026-09-30 (submitted version used 2025-06-30)
     TEST_START = args.test_start
     TEST_END   = args.test_end
     log(f"Test window: {TEST_START} to {TEST_END}")
@@ -619,7 +617,7 @@ def main():
     print(f"  Top-50:  {top50_direct_cov:,} direct → {top50_kg_cov:,} KG  ({cov_mult_top50:.4f}x)", flush=True)
     print(f"  Others:  {others_direct_cov:,} direct → {others_kg_cov:,} KG  ({cov_mult_others:.4f}x)", flush=True)
     print(f"  Overall: {post_filter_cov:,} direct → {post_kg_cov:,} KG  ({cov_mult_overall:.4f}x)", flush=True)
-    print(f"  Paper:   Top-50={ANCHOR_T4['coverage_mult_top50']:.4f}x, Others={ANCHOR_T4['coverage_mult_others']:.4f}x, Overall={ANCHOR_T4['coverage_mult_overall']:.4f}x", flush=True)
+    print(f"  Paper:   Overall={ANCHOR_T4['coverage_mult_overall']:.4f}x (Top-50 / others split not reported in the final paper)", flush=True)
 
     # ── ABLATION: compute z-scores and decomposition from anchors ────────────
     log("ABLATION: Shuffled-Edge Control (from anchors)")
@@ -681,8 +679,8 @@ def main():
         ("T4 Cov Top-50",    cov_mult_top50,                   ANCHOR_T4["coverage_mult_top50"]),
         ("T4 Cov Others",    cov_mult_others,                  ANCHOR_T4["coverage_mult_others"]),
         ("T4 Cov Overall",   cov_mult_overall,                 ANCHOR_T4["coverage_mult_overall"]),
-        ("Ablation Z1",      z1,                               11.4),
-        ("Ablation Z2",      z2,                               8.0),
+        ("Ablation Z1",      z1,                               13.8),
+        ("Ablation Z2",      z2,                               10.0),
         ("Ablation Verdict", 1.0 if verdict == "PASS" else 0.0, 1.0),
     ]
     if bt:
@@ -694,6 +692,7 @@ def main():
 
     print(f"\n  {'Metric':<22} {'Computed':>10} {'Paper':>10} {'Delta':>10} Status", flush=True)
     print(f"  {'-'*60}", flush=True)
+    rows = [r for r in rows if r[2] is not None]          # skip metrics not reported in the final paper
     for name, comp, paper_val in rows:
         delta = comp - paper_val
         if name == "Ablation Verdict":

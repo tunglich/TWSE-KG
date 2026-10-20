@@ -116,8 +116,8 @@ The cache is the source of the five CSV files in `data/csv/`:
 # Step 2: Run the full pipeline
 python src/compute_from_csv.py
 
-# To reproduce the paper's exact test window (2024-01-02 to 2025-06-30):
-python src/compute_from_csv.py --test-start 2024-01-02 --test-end 2025-06-30
+# Final paper held-out window (2024-01-02 to 2026-09-30, i.e. 2024–2026Q3):
+python src/compute_from_csv.py --test-start 2024-01-02 --test-end 2026-09-30
 ```
 
 **To re-run LLM scoring from scratch** (requires OpenAI API key, ~$200 estimated cost):
@@ -138,7 +138,7 @@ python src/compute_from_csv.py --test-start 2024-01-02 --test-end 2025-06-30
 | Temperature | `0.0` (deterministic) |
 | Max tokens | `256` (Pass 1), `512` (Pass 2) |
 | Batch size | 50 articles per request |
-| Total articles scored | ~118,662 (post-filter) |
+| Total articles scored | 125,714 post-filter (308,994 raw, Jan 2015 – Sep 2026) |
 | Estimated API cost | ~$180–220 USD |
 
 ---

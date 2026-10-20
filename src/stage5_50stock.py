@@ -3,7 +3,7 @@ Stage 5 — 50-Stock Individual F1 & Coverage Summary (Table 3 / Table 4).
 
 Loads computed per-stock metrics from the pipeline and displays:
   - Top-50 average F1, Acc, AUC
-  - Top-5 stocks by F1 (from all 576 stocks)
+  - Top-5 stocks by F1 (from the full scoring universe)
   - Paper Top-5 stocks (2330, 2345, 3017, 3711, 6515)
   - Table 4 coverage expansion statistics
 
@@ -64,10 +64,11 @@ def run() -> dict:
     print(f"    Raw articles:           {t4['raw_articles']:>8,}")
     print(f"    Post-filter:            {t4['post_filter']:>8,}")
     print(f"    Post-KG propagation:    {t4['post_kg']:>8,}")
-    print(f"    Top-50 Direct:          {t4['top50_direct']:>8,}")
-    print(f"    Top-50 KG:              {t4['top50_kg']:>8,}")
-    print(f"    Coverage mult (Top-50): {t4['coverage_mult_top50']:>8.4f}×")
-    print(f"    Coverage mult (Others): {t4['coverage_mult_others']:>8.4f}×")
+    if t4.get("top50_direct") is not None:
+        print(f"    Top-50 Direct:          {t4['top50_direct']:>8,}")
+        print(f"    Top-50 KG:              {t4['top50_kg']:>8,}")
+        print(f"    Coverage mult (Top-50): {t4['coverage_mult_top50']:>8.4f}×")
+        print(f"    Coverage mult (Others): {t4['coverage_mult_others']:>8.4f}×")
     print(f"    Coverage mult (Overall):{t4['coverage_mult_overall']:>8.4f}×")
 
     return {"table3": t3, "table4": t4}
@@ -84,8 +85,8 @@ def verify() -> bool:
         f"Top-50 F1 out of range: {t3['top50_f1']:.4f}"
 
     # Table 4: coverage multipliers must be > 1.0
-    assert t4["coverage_mult_top50"]   > 1.0, "Top-50 coverage mult must be > 1.0"
-    assert t4["coverage_mult_others"]  > 1.0, "Others coverage mult must be > 1.0"
+    for k_ in ("coverage_mult_top50", "coverage_mult_others"):
+        assert t4.get(k_) is None or t4[k_] > 1.0, f"{k_} must be > 1.0"
     assert t4["coverage_mult_overall"] > 1.0, "Overall coverage mult must be > 1.0"
 
     # Paper Top-5 tickers must be in computed results

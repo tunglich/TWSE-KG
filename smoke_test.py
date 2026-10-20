@@ -80,9 +80,13 @@ def main() -> int:
     # ── 3. Coverage bound ─────────────────────────────────────────
     section("3. Coverage-Only Bound")
     try:
-        bound, gap = coverage_bound()
-        assert gap > 0, f"Coverage bound {bound:.4f} >= KG {ABLATION['KG']:.4f}"
-        ok(f"Bound = {bound:.4f}, gap = +{gap:.4f}")
+        res = coverage_bound()
+        if res is None:
+            ok("Skipped: final paper reports overall coverage only (no Top-50 direct/KG split)")
+        else:
+            bound, gap = res
+            assert gap > 0, f"Coverage bound {bound:.4f} >= KG {ABLATION['KG']:.4f}"
+            ok(f"Bound = {bound:.4f}, gap = +{gap:.4f}")
     except Exception as e:
         fail(str(e))
 

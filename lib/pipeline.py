@@ -64,28 +64,13 @@ INDEX_CSV   = Path(os.environ.get("INDEX_CSV",   str(_DATA / "index_taiex.csv"))
 CACHE_TTL_SEC = int(os.environ.get("PIPELINE_CACHE_TTL", 86400))
 
 
-# ── Table 4 coverage statistics (paper §4, Table 4) ─────────────────────────
-# SOURCE: Counted directly from the raw article corpus (2024-01-02 to 2025-06-30).
-#   - raw_articles:  total news items fetched from CNYES + Yahoo Finance TW/US
-#   - post_filter:   after LLM relevance filter (Pass 1, see docs/prompt_templates.md)
-#   - post_kg:       after KG propagation (Stage 2 SprintScore assignment)
-#   - top50_*/others_*: split by whether the company is in the Top-50 evaluation set
-# These counts are from the full 576-company corpus run and cannot be reproduced
-# from the Top-54 CSV subset alone; they are stored here as verified constants.
-# To re-verify: re-run the full LLM scoring pipeline on the raw article corpus
-# (see docs/prompt_templates.md §Pre-scored Event Cache for details).
-_TABLE4_ANCHORS: dict[str, Any] = {
-    "raw_articles":        284_925,   # total fetched articles (CNYES + Yahoo TW/US)
-    "post_filter":         118_662,   # after LLM relevance filter (Pass 1)
-    "post_kg":             352_287,   # after KG propagation (Stage 2)
-    "top50_direct":         55_385,   # Top-50 companies, direct articles only
-    "top50_kg":             70_590,   # Top-50 companies, after KG propagation
-    "others_direct":        63_277,   # non-Top-50 companies, direct articles
-    "others_kg":           281_697,   # non-Top-50 companies, after KG propagation
-    "coverage_mult_top50":   1.2745,  # top50_kg / top50_direct
-    "coverage_mult_others":  4.4517,  # others_kg / others_direct
-    "coverage_mult_overall": 2.9688,  # post_kg / post_filter
-}
+# ── Coverage statistics (final paper §3.5) ──────────────────────────────────
+# Counted on the full raw corpus (Jan 2015 – Sep 2026): 308,994 raw Taiwan articles →
+# 125,714 post-filter → 383,434 KG-propagated firm-level impact records (3.05×).
+# These cannot be reproduced from the Top-54 CSV subset, so the verified constants in
+# lib/anchors.py (TABLE4) are used.  The final paper does not split direct vs KG records
+# by Top-50 / others, so those keys are None.
+from lib.anchors import TABLE4 as _TABLE4_ANCHORS  # noqa: E402
 
 
 def _cache_is_fresh() -> bool:

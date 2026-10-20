@@ -51,8 +51,8 @@ def run() -> dict:
         firm_share   = (kg - a2)    / total * 100
 
     # If coverage bound not in pipeline, compute from Table4
-    if cov_bound is None:
-        t4 = res.get("table4", TABLE4)
+    t4 = res.get("table4", TABLE4)
+    if cov_bound is None and t4.get("top50_kg") and t4.get("top50_direct"):
         rho_d    = math.sin(math.pi * (ladder["Direct"] - 0.5))
         cov_mult = t4["top50_kg"] / t4["top50_direct"]
         rho_best = rho_d * math.sqrt(cov_mult)

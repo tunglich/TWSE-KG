@@ -6,24 +6,33 @@ A Proprietary Database and Knowledge Graph for Financial News Analysis and Scori
 
 ## Overview
 
-This repository contains the experimental code and data for reproducing the results in the ICAIF 2026 paper:
-**"Cross-Market Knowledge Graph Propagation for Taiwan Stock Supply Chain Sentiment Scoring"**.
+This repository accompanies the ICAIF 2026 paper
 
-The system uses a two-tier sentiment scoring architecture:
-- **Tier-1 (Market-Level):** Cross-market (TW+US) aggregate nowcast/forecast
-- **Tier-2 (Firm-Level):** Knowledge-graph-propagated firm-specific sentiment with typed edges, exposure weights, and two-hop propagation
+> **Cross-Market Sentiment Propagation via Firm-Level Knowledge Graphs: A Two-Tier Hierarchical Scoring System for Taiwan–U.S. Equities**
+> Tung-Li Chen and Jyh-Shing Roger Jang (Department of Computer Science and Information Engineering, National Taiwan University).
+> *7th ACM International Conference on AI in Finance (ICAIF '26)*, November 14–17, 2026, Milan, Italy. https://doi.org/10.1145/3858063.3858704
+
+The framework classifies and scores Taiwan and U.S. news, propagates sentiment from named anchor entities to economically
+affected Taiwan-listed firms through auditable knowledge-graph (KG) paths, and calibrates Taiwan-side and prior-session U.S.
+signals into market- and stock-level scores on a [1, 100] scale:
+
+- **Tier 1 (Market-Level):** fuses the Taiwan market sentiment score with prior-session U.S. news sentiment (β = 0.25 on Taiwan news, 0.75 on U.S. news) into a TAIEX direction score.
+- **Tier 2 (Stock-Level):** for each of the 1,179 Taiwan-listed firms, combines the KG-propagated firm Taiwan score (SprintScore), the Tier-1 market score and lagged stock-specific U.S. sentiment under per-stock simplex weights.
+
+The KG snapshot used in the paper (September 30, 2026) contains 8,127 nodes — including 1,179 Taiwan-listed firms — and
+40,237 de-duplicated edges (30,942 supplier–customer, 3,704 competitor, 5,591 investee) spanning Taiwan, the United States,
+Greater China, Japan, Korea and Europe.
 
 ## Web Application
 
-The following screenshots illustrate the anonymised web application built on top of this pipeline.
-All pages are publicly accessible without login and contain no author-identifying information.
+The following screenshots illustrate the web application built on top of this pipeline. All pages are publicly accessible without login.
 
 <table>
   <tr>
     <td align="center" width="50%">
       <img src="docs/screenshots/screenshot_home.png" alt="Home" width="100%"/>
       <br/>
-      <sub><b>Fig. A.</b> Home page — full-text company search across 576 TWSE-listed companies with supply-chain statistics summary.</sub>
+      <sub><b>Fig. A.</b> Home page — full-text company search across 5,499 companies (1,159 Taiwan-listed firms with supply-chain pages plus overseas companies) with a supply-chain statistics summary.</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/screenshots/screenshot_analysis.png" alt="Analysis" width="100%"/>
@@ -35,7 +44,7 @@ All pages are publicly accessible without login and contain no author-identifyin
     <td align="center" width="50%">
       <img src="docs/screenshots/screenshot_kg.png" alt="Knowledge Graph" width="100%"/>
       <br/>
-      <sub><b>Fig. C.</b> Supply Chain Knowledge Graph — interactive force-directed graph with 2-hop propagation (107 nodes, 120 edges for TSMC).</sub>
+      <sub><b>Fig. C.</b> Supply Chain Knowledge Graph — interactive firm-centred graph with 2-hop propagation (for TSMC: 256 suppliers, 167 customers, 16 named competitors, 5 investees).</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/screenshots/screenshot_news_sentiment.png" alt="News Sentiment" width="100%"/>
@@ -144,12 +153,34 @@ See [docs/data_schema.md](docs/data_schema.md) for full column descriptions.
 
 ## Key Results
 
-- **F1 lift:** 0.5309 (Direct) → 0.6456 (KG) = +0.1147 (11.5 points)
-- **Coverage:** 2.97× overall, 1.27× for Top-50, 4.45× for others
-- **Backtest:** KG long-short 14.6% annualized return, Sharpe 1.12
-- **Ablation:** KG clears both null bands (A1: 11.4σ, A2: 8.0σ), verdict = PASS
-- **Coverage-only hypothesis rejected:** R²(gain, coverage) ≈ 0
+Held-out window 2024-01-02 – 2026-09-30 (2024–2026Q3); pre-open inputs; Tier-2 target = stock open-to-close direction.
+
+- **F1 lift (Top-50):** 0.5348 (LLM-Direct) → 0.6524 (KG) = +0.1176 (11.8 points); Market-Wide baseline 0.5053
+- **Tier 1:** same-day nowcast F1 = 0.7357 (Acc. 68.13%, ROC-AUC 0.7170); next-day forecast F1 = 0.6064 (Acc. 60.64%)
+- **Coverage:** 308,994 raw Taiwan articles (2015 – 2026Q3) → 125,714 post-filter → 383,434 firm-level impact records (3.05×); 19.3% of post-KG records fall on Top-50 constituents, 80.7% on other firms
+- **Shuffled-edge ablation:** KG exceeds the global shuffle (A1, 0.6138) by +0.0386 F1 (13.8 SD) and the sector-constrained shuffle (A2, 0.6175) by +0.0349 (10.0 SD); the A2 gap is 29.7% of the Direct-to-KG lift
+- **Backtest (economic check):** KG long–short (Q1–Q5) 15.4% annualized, net Sharpe 1.18, max drawdown 9.4%, turnover 19%/day; LLM-Direct long–short 6.2%, Sharpe 0.49
+- **Robustness:** varying γ, hop limit, frontier cap, λ_s and λ_t one at a time keeps Top-50 F1 within [0.621, 0.662], above LLM-Direct throughout
+
+All values above are those reported in the final paper and are recorded in `lib/anchors.py` (single source of truth for
+`run_experiments.py --verify`, `smoke_test.py` and CI). The `50_Stock_F1_Coverage` sheet and the A3/A4 ablation rungs are
+from the earlier submitted version and are not reported in the final paper. Re-computing from raw data requires the
+pre-scored CSV cache in `data/csv/`, which is not distributed.
+
+## Citation
+
+```bibtex
+@inproceedings{chen2026crossmarket,
+  author    = {Chen, Tung-Li and Jang, Jyh-Shing Roger},
+  title     = {Cross-Market Sentiment Propagation via Firm-Level Knowledge Graphs: A Two-Tier Hierarchical Scoring System for Taiwan--U.S. Equities},
+  booktitle = {Proceedings of the 7th ACM International Conference on AI in Finance (ICAIF '26)},
+  year      = {2026},
+  address   = {Milan, Italy},
+  publisher = {ACM},
+  doi       = {10.1145/3858063.3858704}
+}
+```
 
 ## License
 
-Proprietary. All rights reserved.
+Code and data: proprietary, all rights reserved (see `LICENSE`). The paper itself is published under CC BY 4.0.

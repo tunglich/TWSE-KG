@@ -57,6 +57,8 @@ def write_table4(wb):
     ws.append(["Coverage mult Top-50", t4["coverage_mult_top50"]])
     ws.append(["Coverage mult Others", t4["coverage_mult_others"]])
     ws.append(["Coverage mult Overall", t4["coverage_mult_overall"]])
+    ws.append(["Post-KG share Top-50 (%)", t4.get("post_kg_share_top50")])
+    ws.append(["Post-KG share Others (%)", t4.get("post_kg_share_others")])
 
 
 def write_table6(wb):
@@ -71,7 +73,7 @@ def write_ablation(wb):
     ws.append(["Rung", "F1", "SD", "Reps"])
     for rung, f1 in ABLATION.items():
         sd = SHUFFLE_SD.get(rung, "")
-        reps = 20 if rung in ("A1", "A2", "A3") else 1
+        reps = 5 if rung in ("A1", "A2") else (20 if rung == "A3" else 1)   # final paper: five randomized runs per null design
         ws.append([rung, f1, sd, reps])
 
 

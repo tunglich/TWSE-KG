@@ -10,7 +10,7 @@ Tier-1 market sentiment is computed as a cap-weighted mean over all stocks in th
 scoring universe. The result is sensitive to universe size:
 
   --tw50 mode (default, Top-54 stocks):  F1 ≈ 0.774  (higher due to noise averaging)
-  --full-universe mode (all 576 stocks): F1 ≈ 0.737  (matches paper Table 2 = 0.7357)
+  --full-universe mode (full scoring universe): F1 ≈ 0.737 on the submitted-version cache (paper Table 2 = 0.7357)
 
 The paper uses the full-universe mode. To reproduce Table 2 exactly:
 

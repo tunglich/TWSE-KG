@@ -1,6 +1,6 @@
 # Knowledge Graph Data — Taiwan Supply Chain
 
-This directory contains the complete Knowledge Graph (KG) data exported from the Neo4j database used in the ICAIF 2026 paper. The data represents Taiwan-listed company supply-chain and competitive relationships.
+This directory contains the Taiwan propagation Knowledge Graph (KG) exported from the Neo4j database behind the ICAIF 2026 paper. The data represents Taiwan-listed company supply-chain and competitive relationships.
 
 ## Files
 
@@ -52,19 +52,21 @@ This directory contains the complete Knowledge Graph (KG) data exported from the
 - **Mean out-degree (SUPPLIES_TO)**: ~4.6 per supplier
 - **Coverage**: 33 industry sectors
 
-## Node Universe in the paper snapshot: 576 TWSE vs 4,512 Total
+## Node Universe
 
-The paper reports **576 Taiwan-listed companies** as the scoring universe. The KG contains **4,512 nodes** in total. This discrepancy is intentional and reflects the graph propagation design:
+The final paper scores **1,179 Taiwan-listed firms** (TWSE/TPEx) and uses a multi-market KG snapshot of
+**8,127 nodes and 40,237 de-duplicated edges** (September 30, 2026; Table 1(b)). The three files in this directory are
+the Taiwan propagation edge list consumed by the pipeline; the full multi-market graph is in `data/kg_global/`.
 
-| Node type | Count | Role |
-|-----------|-------|------|
-| TWSE/OTC-listed companies (scored) | 576 | Tier-2 scoring targets; receive daily SprintScore |
-| Overseas anchors (US, JP, KR, CN) | ~3,936 | Propagation sources only; not scored themselves |
-| **Total KG nodes** | **4,512** | All nodes used in graph propagation |
+| Node type | Role |
+|-----------|------|
+| TWSE/TPEx-listed companies (`is_twse_listed = 1`) | Tier-2 scoring targets; receive daily SprintScore |
+| Other nodes (`is_twse_listed = 0`) | Propagation sources / themes only; not scored themselves |
 
-Overseas anchors include companies such as ASML, Apple, NVIDIA, Samsung, and CATL. When a US company (e.g. Apple) has a strong earnings day, the sentiment propagates through `SUPPLIES_TO` edges to its Taiwanese suppliers (e.g. Hon Hai, Largan). The `is_twse_listed` column in `companies.csv` distinguishes the two groups.
-
-The `companies.csv` schema includes an `is_twse_listed` flag (1 = TWSE/OTC listed, 0 = overseas anchor). The pipeline's `--tw50` and `--full-universe` modes both restrict **scoring** to TWSE-listed nodes; overseas nodes are used only as propagation sources.
+Overseas anchors include companies such as ASML, Apple, NVIDIA, Samsung, and CATL. When a U.S. company (e.g. Apple) has a
+strong earnings day, the sentiment propagates through `SUPPLIES_TO` edges to its Taiwanese suppliers (e.g. Hon Hai, Largan).
+The pipeline's `--tw50` and `--full-universe` modes both restrict **scoring** to Taiwan-listed nodes; other nodes are used
+only as propagation sources.
 
 ## Version note (updated 2026-10-20)
 

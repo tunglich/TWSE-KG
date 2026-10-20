@@ -176,10 +176,10 @@ python run_experiments.py --table 50stock    # 50-stock analysis
 | Stage | Script | Output | Key Metrics |
 |---|---|---|---|
 | 1 | `stage1_market_level.py` | Table 2 | Same-day F1=0.7357, Acc=68.13%, AUC=0.7170; Next-day F1=0.6064, Acc=60.64% |
-| 2 | `stage2_firm_level.py` | Tables 3 & 4 | Top-50 avg F1(KG)=0.6456, F1(Direct)=0.5309, F1(Wide)=0.5040; Coverage 2.97× overall |
-| 3 | `stage3_ablation.py` | Ablation ladder | 7 rungs from MarketWide (0.5040) to KG (0.6456); z-scores vs A1 and A2; additive decomposition; PASS/FAIL verdict |
-| 4 | `stage4_backtest.py` | Table 6 | KG-LS: 14.6% ann. return, Sharpe 1.12; LLM-LS: 5.9%, Sharpe 0.47; TAIEX: 34.0% |
-| 5 | `stage5_50stock.py` | 50-stock stats | 50 stocks, avg F1 gain +0.1147, all positive; Gain-Coverage R² ≈ 0 (coverage-only hypothesis rejected) |
+| 2 | `stage2_firm_level.py` | Tables 3 & 4 | Top-50 avg F1(KG)=0.6524, F1(Direct)=0.5348, F1(Wide)=0.5053; Coverage 3.05× overall |
+| 3 | `stage3_ablation.py` | Ablation ladder | MarketWide (0.5053) → LLM-Direct (0.5348) → A1 (0.6138) / A2 (0.6175) → KG (0.6524); z-scores vs A1 and A2; additive decomposition; PASS/FAIL verdict |
+| 4 | `stage4_backtest.py` | Table 6 | KG-LS: 15.4% ann. return, Sharpe 1.18; LLM-LS: 6.2%, Sharpe 0.49; TAIEX: 34.0% |
+| 5 | `stage5_50stock.py` | 50-stock stats | Submitted-version supplementary sheet (50 stocks, all gains positive; Gain-Coverage R² ≈ 0); not reported in the final paper |
 
 ---
 
@@ -195,11 +195,11 @@ make verify
 This runs each stage with the `--verify` flag and asserts:
 
 - **Table 2:** Same-day F1 = 0.7357, Acc = 68.13%, AUC = 0.7170; Next-day F1 = 0.6064, Acc = 60.64%.
-- **Table 3:** For each of the five highlighted tickers (2330, 2345, 3017, 3711, 6515), the ordering F1(KG) > F1(Direct) > F1(Wide) holds. Top-50 averages match exactly: F1(KG) = 0.6456, F1(Direct) = 0.5309, F1(Wide) = 0.5040.
-- **Table 4:** Coverage multipliers are internally consistent (Top-50 = 70,590 / 55,385 = 1.2745; Overall = 352,287 / 118,662 = 2.9688).
-- **Ablation:** MarketWide = 0.5040, KG = 0.6456. Z-score (KG vs A1) exceeds 1.96; Z-score (KG vs A2) exceeds 1.96. Additive decomposition sums to 100%.
-- **Backtest:** KG-LS ann. return = 14.6%, Sharpe = 1.12. KG-LS beats LLM-LS on both return and Sharpe. TAIEX ann. return = 34.0%.
-- **50-Stock:** Exactly 50 stocks, all F1 gains positive, average gain ≈ 0.1147. Top-5 tickers match Table 3 values within 0.001.
+- **Table 3:** For each of the five highlighted tickers (2330, 3017, 2345, 3711, 6515), the ordering F1(KG) > F1(Direct) > F1(Wide) holds. Top-50 averages: F1(KG) = 0.6524, F1(Direct) = 0.5348, F1(Wide) = 0.5053.
+- **Coverage (§3.5):** Overall multiplier is internally consistent (383,434 / 125,714 = 3.05×); Top-50 / other-firm shares of post-KG records sum to 100% (19.3% / 80.7%).
+- **Ablation:** MarketWide, Direct and KG equal the Table 3 Top-50 values. Gap/SD (KG vs A1) = 13.8 and (KG vs A2) = 10.0. Additive decomposition sums to 100% (KG − A2 = 29.7% of the Direct-to-KG lift).
+- **Backtest:** KG-LS ann. return = 15.4%, net Sharpe = 1.18, max DD = 9.4%. KG-LS beats LLM-LS (6.2%, 0.49) on both return and Sharpe. TAIEX TR ann. return = 34.0% (context only).
+- **50-Stock (submitted-version sheet):** Exactly 50 stocks, all F1 gains positive.
 
 A successful run prints `All verifications passed ✓`.
 
@@ -214,8 +214,8 @@ infrastructure), and result collection.
 
 ### 8.1 Background
 
-The reviewer's central objection is that the 11.5-point F1 lift (0.5309 →
-0.6456) may come from propagation giving each firm *more* sentiment records
+The reviewer's central objection is that the 11.8-point F1 lift (0.5348 →
+0.6524) may come from propagation giving each firm *more* sentiment records
 (coverage), not from the supply-chain links being real. A degree-matched
 double-edge swap preserves every node's in-degree and out-degree exactly, so
 the propagated record count is identical by construction — the only thing
@@ -508,22 +508,21 @@ of truth. The key anchors:
 | Same-day AUC | 0.7170 | Table 2 |
 | Next-day F1 | 0.6064 | Table 2 |
 | Next-day Accuracy | 60.64% | Table 2 |
-| Top-50 F1(KG) | 0.6456 | Table 3, Ablation KG |
-| Top-50 F1(Direct) | 0.5309 | Table 3, Ablation Direct |
-| Top-50 F1(Wide) | 0.5040 | Table 3, Ablation MarketWide |
-| F1 Gain | +0.1147 | Table 3 |
-| Coverage Multiplier (Overall) | 2.9688 | Table 4 |
-| Coverage Multiplier (Top-50) | 1.2745 | Table 4 |
-| Coverage Multiplier (Others) | 4.4517 | Table 4 |
-| KG-LS Annualized Return | 14.6% | Table 6 |
-| KG-LS Sharpe | 1.12 | Table 6 |
-| LLM-LS Annualized Return | 5.9% | Table 6 |
+| Top-50 F1(KG) | 0.6524 | Table 3, Table 4 (KG full) |
+| Top-50 F1(Direct) | 0.5348 | Table 3, Table 4 (LLM-Direct) |
+| Top-50 F1(Wide) | 0.5053 | Table 3, Table 4 (Market-Wide) |
+| F1 Gain | +0.1176 | Table 3 |
+| Coverage Multiplier (Overall) | 3.05 (383,434 / 125,714) | §3.5 |
+| Post-KG share Top-50 / others | 19.3% / 80.7% | §3.5 |
+| KG-LS Annualized Return | 15.4% | Table 6 |
+| KG-LS Sharpe | 1.18 | Table 6 |
+| LLM-LS Annualized Return | 6.2% | Table 6 |
 | TAIEX Annualized Return | 34.0% | Table 6 |
 | Ablation A1 F1 | 0.6138 (sd 0.0028) | §5 |
 | Ablation A2 F1 | 0.6175 (sd 0.0035) | §5 |
-| Ablation A4 F1 | 0.6296 | §5 |
-| Z-score (KG vs A1) | 11.4 | §5 |
-| Z-score (KG vs A2) | 8.0 | §5 |
+| Ablation A4 F1 | 0.6296 (submitted version only) | — |
+| Gap/SD (KG vs A1) | 13.8 | Table 4 |
+| Gap/SD (KG vs A2) | 10.0 | Table 4 |
 | Verdict | PASS | §5 |
 | Gain-Coverage R² | ≈ 0 | §5 |
 
@@ -537,16 +536,15 @@ ablation ladder and the reported KG run. They are recorded in
 
 | Parameter | Value |
 |---|---|
-| Corpus window | 2023-01-01 to 2024-06-30 |
-| Number of firms | 576 |
+| Corpus window | 2015-01-01 to 2026-09-30 |
+| Number of firms | 1,179 |
 | Number of sectors | 33 |
-| KG edges | 979 |
-| Mean degree | 3.40 |
+| KG nodes / edges (2026Q3 snapshot) | 8,127 / 40,237 |
 | Number of lags | 5 |
 | Default threshold | 50 |
 | Buy commission | 0.10% |
 | Sell commission | 0.34% |
-| Test window | 2024-01-02 to 2024-06-30 |
+| Test window | 2024-01-02 to 2026-09-30 (2024–2026Q3) |
 | Decay (γ) | 0.5 |
 | Hops | 2 |
 | Path cap | ±50 |
@@ -560,11 +558,12 @@ ablation ladder and the reported KG run. They are recorded in
 
 If you use this code or data in your research, please cite:
 
-> *Cross-Market Knowledge Graph Propagation for Taiwan Stock Supply Chain
-> Sentiment Scoring.* ICAIF 2026.
+> Tung-Li Chen and Jyh-Shing Roger Jang. 2026. *Cross-Market Sentiment Propagation via Firm-Level
+> Knowledge Graphs: A Two-Tier Hierarchical Scoring System for Taiwan–U.S. Equities.* In 7th ACM
+> International Conference on AI in Finance (ICAIF '26), Milan, Italy. https://doi.org/10.1145/3858063.3858704
 
 ---
 
 ## 15. License
 
-Proprietary. All rights reserved. See [`LICENSE`](../LICENSE) for details.
+Code and data: proprietary, all rights reserved — see [`LICENSE`](../LICENSE). The paper is published under CC BY 4.0.

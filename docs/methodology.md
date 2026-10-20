@@ -53,8 +53,9 @@ cross-source near-duplicate reports of the same event. The LLM assigns:
 ### Stage 2 — KG Supply-Chain Impact Propagation
 
 The proprietary firm-level knowledge graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$
-covers 576 TWSE-listed firms plus overseas anchor nodes (suppliers, customers,
-competitors). Each directed edge $e = (a, c) \in \mathcal{E}$ carries an
+covers 1,179 TWSE/TPEx-listed firms plus overseas anchor nodes (suppliers, customers,
+competitors, investees); the September 30, 2026 snapshot has 8,127 nodes and 40,237
+de-duplicated edges. Each directed edge $e = (a, c) \in \mathcal{E}$ carries an
 exposure weight $w_{a,c}$ fixed by edge type:
 
 | Edge type | Weight $w_{a,c}$ | Sign convention |
@@ -163,7 +164,7 @@ maximum-likelihood cross-entropy on walk-forward training folds.
 
 ### Tier 2 — Stock-Level Score
 
-For each of the 576 TWSE stocks, Tier 2 combines three intentionally separated
+For each of the 1,179 Taiwan-listed stocks, Tier 2 combines three intentionally separated
 inputs subject to a simplex constraint:
 
 **(Eq. 7)** $C\_{j,t}^{(2)} = a\_j \cdot TW\_{j,t} + b\_j \cdot M\_t + c\_j \cdot U\_j$, where $U\_j$ is the prior-session U.S. score for firm $j$; subject to $a\_j + b\_j + c\_j = 1$.

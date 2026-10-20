@@ -24,46 +24,15 @@ from pathlib import Path
 
 # ─── Paper Anchors (ground truth from the published paper) ───────────────────
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.anchors import TABLE2, TABLE3, TABLE4, TABLE6, ABLATION, SHUFFLE_SD, TOP5_TICKERS  # noqa: E402
+
 PAPER_ANCHORS = {
-    "table2": {
-        "same_day": {"f1": 0.7357, "acc": 68.13, "auc": 0.7170},
-        "next_day": {"f1": 0.6064, "acc": 60.64},
-    },
-    "table3": {
-        "2330": {"f1_kg": 0.7223, "f1_direct": 0.6327, "f1_wide": 0.5124, "acc": 71.8, "auc": 0.7730},
-        "2345": {"f1_kg": 0.7111, "f1_direct": 0.5592, "f1_wide": 0.5087, "acc": 72.4, "auc": 0.7241},
-        "3017": {"f1_kg": 0.7157, "f1_direct": 0.5733, "f1_wide": 0.5142, "acc": 70.9, "auc": 0.7118},
-        "3711": {"f1_kg": 0.6860, "f1_direct": 0.5843, "f1_wide": 0.5063, "acc": 69.4, "auc": 0.7323},
-        "6515": {"f1_kg": 0.6557, "f1_direct": 0.5356, "f1_wide": 0.5091, "acc": 64.7, "auc": 0.6691},
-        "top50_avg": {"f1_kg": 0.6456, "f1_direct": 0.5309, "f1_wide": 0.5040, "acc": 64.6, "auc": 0.6534},
-    },
-    "table4": {
-        "raw_articles": 284925,
-        "post_filter": 118662,
-        "post_kg": 352287,
-        "top50_direct": 55385,
-        "top50_kg": 70590,
-        "others_direct": 63277,
-        "others_kg": 281697,
-        "coverage_mult_top50": 1.2745,
-        "coverage_mult_others": 4.4517,
-        "coverage_mult_overall": 2.9688,
-    },
-    "table6": {
-        "kg_ls": {"ann_ret": 14.6, "sharpe": 1.12, "max_dd": 9.6, "turnover": 19},
-        "kg_long": {"ann_ret": 21.4, "sharpe": 0.71, "max_dd": 13.1, "turnover": 11, "excess": 6.8, "ir": 0.71},
-        "llm_ls": {"ann_ret": 5.9, "sharpe": 0.47, "max_dd": 14.8, "turnover": 21},
-        "taiex": {"ann_ret": 34.0, "sharpe": 1.38, "max_dd": 27.7, "turnover": 0},
-    },
-    "ablation": {
-        "MarketWide": 0.5040,
-        "Direct": 0.5309,
-        "A1": 0.6138,
-        "A2": 0.6175,
-        "A3": 0.6060,
-        "A4": 0.6296,
-        "KG": 0.6456,
-    },
+    "table2": TABLE2,
+    "table3": TABLE3,
+    "table4": TABLE4,
+    "table6": TABLE6,
+    "ablation": ABLATION,
 }
 
 
@@ -88,7 +57,7 @@ def run_table3():
     print(f"  {'Ticker':<8} {'Company':<16} {'F1(KG)':<10} {'F1(Direct)':<12} {'F1(Wide)':<10} {'Acc(%)':<8} {'AUC':<8} {'Gain':<8}")
     print("-" * 90)
     t3 = PAPER_ANCHORS["table3"]
-    for ticker in ["2330", "2345", "3017", "3711", "6515"]:
+    for ticker in TOP5_TICKERS:
         d = t3[ticker]
         gain = d["f1_kg"] - d["f1_direct"]
         print(f"  {ticker:<8} {d.get('name', ticker):<16} {d['f1_kg']:<10.4f} {d['f1_direct']:<12.4f} {d['f1_wide']:<10.4f} {d['acc']:<8.1f} {d['auc']:<8.4f} +{gain:<7.4f}")
@@ -109,8 +78,11 @@ def run_table4():
     print(f"  Post-filter:            {t4['post_filter']:>10,}  ({t4['post_filter']/t4['raw_articles']*100:.1f}% of raw)")
     print(f"  Post-KG propagation:    {t4['post_kg']:>10,}  ({t4['post_kg']/t4['post_filter']:.2f}x post-filter)")
     print()
-    print(f"  Top-50:  {t4['top50_direct']:>6,} direct → {t4['top50_kg']:>6,} KG  ({t4['coverage_mult_top50']:.4f}x)")
-    print(f"  Others:  {t4['others_direct']:>6,} direct → {t4['others_kg']:>6,} KG  ({t4['coverage_mult_others']:.4f}x)")
+    if t4.get("top50_direct") is not None:
+        print(f"  Top-50:  {t4['top50_direct']:>6,} direct → {t4['top50_kg']:>6,} KG  ({t4['coverage_mult_top50']:.4f}x)")
+        print(f"  Others:  {t4['others_direct']:>6,} direct → {t4['others_kg']:>6,} KG  ({t4['coverage_mult_others']:.4f}x)")
+    else:
+        print(f"  Post-KG records: {t4['post_kg_share_top50']:.1f}% Top-50 constituents, {t4['post_kg_share_others']:.1f}% other firms")
     print(f"  Overall: {t4['post_filter']:>6,} direct → {t4['post_kg']:>6,} KG  ({t4['coverage_mult_overall']:.4f}x)")
     return t4
 
@@ -125,6 +97,9 @@ def run_table6():
     print("-" * 70)
     for name, d in t6.items():
         label = name.replace("_", " ").title()
+        if d.get("ann_ret") is None:
+            print(f"  {label:<30} +{d['excess']:.1f}pp excess, IR {d['ir']:.2f}, MaxDD {d['max_dd']:.1f}%, turnover {d['turnover']}%/day")
+            continue
         print(f"  {label:<30} {d['ann_ret']:<10.1f}% {d['sharpe']:<10.2f} {d['max_dd']:<10.1f}% {d['turnover']:<10d}%")
     return t6
 
@@ -138,16 +113,16 @@ def run_ablation():
     print(f"  {'Rung':<15} {'F1':<10} {'SD':<10} {'Reps':<6}")
     print("-" * 45)
     for rung, f1 in abl.items():
-        sd = {"A1": 0.0028, "A2": 0.0035, "A3": 0.0041}.get(rung, "—")
-        reps = 20 if rung in ("A1", "A2", "A3") else 1
+        sd = SHUFFLE_SD.get(rung, "—")
+        reps = 5 if rung in ("A1", "A2") else (20 if rung == "A3" else 1)
         print(f"  {rung:<15} {f1:<10.4f} {sd:<10} {reps:<6}")
 
     # Z-scores
     kg = abl["KG"]
     a1 = abl["A1"]
     a2 = abl["A2"]
-    z1 = (kg - a1) / 0.0028
-    z2 = (kg - a2) / 0.0035
+    z1 = (kg - a1) / SHUFFLE_SD["A1"]
+    z2 = (kg - a2) / SHUFFLE_SD["A2"]
     print(f"\n  Z-score (KG vs A1): {z1:.1f} sd")
     print(f"  Z-score (KG vs A2): {z2:.1f} sd")
 
@@ -165,10 +140,12 @@ def run_ablation():
     # Coverage bound
     import math
     rho_direct = math.sin(math.pi * (direct - 0.5))
-    cov_mult = 70590 / 55385
-    rho_best = rho_direct * math.sqrt(cov_mult)
-    best_f1 = 0.5 + math.asin(min(1, rho_best)) / math.pi
-    print(f"\n  Coverage-only bound: F1 ≤ {best_f1:.4f} (actual KG = {kg:.4f}, unexplained = +{kg - best_f1:.4f})")
+    t4 = PAPER_ANCHORS["table4"]
+    if t4.get("top50_kg") and t4.get("top50_direct"):
+        cov_mult = t4["top50_kg"] / t4["top50_direct"]
+        rho_best = rho_direct * math.sqrt(cov_mult)
+        best_f1 = 0.5 + math.asin(min(1, rho_best)) / math.pi
+        print(f"\n  Coverage-only bound: F1 ≤ {best_f1:.4f} (actual KG = {kg:.4f}, unexplained = +{kg - best_f1:.4f})")
     print(f"  Verdict: {'PASS' if z1 > 1.96 and z2 > 1.96 else 'FAIL'}")
 
     return abl
@@ -236,7 +213,7 @@ def verify():
 
     # Table 3 checks
     t3 = PAPER_ANCHORS["table3"]
-    for ticker in ["2330", "2345", "3017", "3711", "6515"]:
+    for ticker in TOP5_TICKERS:
         d = t3[ticker]
         gain = d["f1_kg"] - d["f1_direct"]
         assert gain > 0, f"Table 3 {ticker}: F1 gain must be positive"
@@ -244,23 +221,22 @@ def verify():
         print(f"  ✓ Table 3 {ticker}: F1(KG)={d['f1_kg']:.4f} > F1(Direct)={d['f1_direct']:.4f} > F1(Wide)={d['f1_wide']:.4f}")
 
     avg = t3["top50_avg"]
-    assert avg["f1_kg"] == 0.6456, f"Top-50 F1(KG) mismatch: {avg['f1_kg']}"
-    assert avg["f1_direct"] == 0.5309, f"Top-50 F1(Direct) mismatch: {avg['f1_direct']}"
-    assert avg["f1_wide"] == 0.5040, f"Top-50 F1(Wide) mismatch: {avg['f1_wide']}"
+    assert avg["f1_kg"] > avg["f1_direct"] > avg["f1_wide"], "Top-50 ordering KG > Direct > Wide violated"
     print(f"  ✓ Table 3 Top-50 avg: F1(KG)={avg['f1_kg']:.4f}, F1(Direct)={avg['f1_direct']:.4f}, F1(Wide)={avg['f1_wide']:.4f}")
 
     # Table 4 checks
     t4 = PAPER_ANCHORS["table4"]
-    assert t4["coverage_mult_top50"] == round(70590 / 55385, 4), "Table 4 Top-50 coverage mult mismatch"
-    assert t4["coverage_mult_overall"] == round(352287 / 118662, 4), "Table 4 overall coverage mult mismatch"
-    print(f"  ✓ Table 4: Top-50 coverage mult = {t4['coverage_mult_top50']:.4f}, overall = {t4['coverage_mult_overall']:.4f}")
+    assert t4["coverage_mult_overall"] == round(t4["post_kg"] / t4["post_filter"], 4), "Table 4 overall coverage mult mismatch"
+    assert abs(t4["post_kg_share_top50"] + t4["post_kg_share_others"] - 100.0) < 0.05, "Table 4 shares must sum to 100%"
+    print(f"  ✓ Table 4: overall coverage mult = {t4['coverage_mult_overall']:.4f} ({t4['post_filter']:,} → {t4['post_kg']:,})")
 
     # Ablation checks
     abl = PAPER_ANCHORS["ablation"]
-    assert abl["MarketWide"] == 0.5040, "Ablation MarketWide must equal paper Table 3 value"
-    assert abl["KG"] == 0.6456, "Ablation KG must equal paper Top-50 avg"
-    z1 = (abl["KG"] - abl["A1"]) / 0.0028
-    z2 = (abl["KG"] - abl["A2"]) / 0.0035
+    assert abl["MarketWide"] == t3["top50_avg"]["f1_wide"], "Ablation MarketWide must equal Table 3 Top-50 F1(Wide)"
+    assert abl["Direct"] == t3["top50_avg"]["f1_direct"], "Ablation Direct must equal Table 3 Top-50 F1(Direct)"
+    assert abl["KG"] == t3["top50_avg"]["f1_kg"], "Ablation KG must equal Table 3 Top-50 F1(KG)"
+    z1 = (abl["KG"] - abl["A1"]) / SHUFFLE_SD["A1"]
+    z2 = (abl["KG"] - abl["A2"]) / SHUFFLE_SD["A2"]
     assert z1 > 1.96, f"Z-score A1 must exceed 1.96, got {z1:.1f}"
     assert z2 > 1.96, f"Z-score A2 must exceed 1.96, got {z2:.1f}"
     print(f"  ✓ Ablation: MarketWide={abl['MarketWide']:.4f}, KG={abl['KG']:.4f}, z1={z1:.1f}, z2={z2:.1f}")
