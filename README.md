@@ -4,6 +4,16 @@
 
 An Open-Source Database and Knowledge Graph for Financial News Analysis and Scoring.
 
+## Video Presentation
+
+<p align="center">
+  <a href="docs/video/ICAIF_KG_web.mp4" title="Watch the ICAIF 2026 presentation (MP4, 48 min)">
+    <img src="docs/video/ICAIF_KG_web_poster.png" width="720" alt="ICAIF 2026 presentation video: Cross-Market Sentiment Propagation via Firm-Level Knowledge Graphs">
+  </a>
+  <br>
+  <em>ICAIF 2026 presentation video (MP4, 1280×720, ~48 min, 19 MB). Click the image to play.</em>
+</p>
+
 ## Overview
 
 This repository accompanies the ICAIF 2026 paper
