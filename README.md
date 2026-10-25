@@ -11,7 +11,7 @@ An Open-Source Database and Knowledge Graph for Financial News Analysis and Scor
     <img src="docs/video/ICAIF_KG_web_poster.png" width="720" alt="ICAIF 2026 presentation video: Cross-Market Sentiment Propagation via Firm-Level Knowledge Graphs">
   </a>
   <br>
-  <em>ICAIF 2026 presentation video (MP4, 1280×720, ~48 min, 19 MB). Click the image to download and play.</em>
+  <em>ICAIF 2026 presentation video (MP4, 1280×720, ~48 min, 9 MB). Click the image to download and play.</em>
 </p>
 
 ## Overview
