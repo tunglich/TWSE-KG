@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/85836ff7-4892-4168-bfa5-f6c90cfd16f4
-
 # TWSE-KG
 
 [![CI](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml/badge.svg)](https://github.com/tunglich/TWSE-KG/actions/workflows/verify.yml)
@@ -10,21 +6,9 @@ An Open-Source Database and Knowledge Graph for Financial News Analysis and Scor
 
 ## Video Presentation
 
-<p align="center">
-  <a href="https://github.com/tunglich/TWSE-KG/raw/main/docs/video/ICAIF_KG_web.mp4" title="Download the ICAIF 2026 presentation (MP4, 48 min)">
-    <img src="docs/video/ICAIF_KG_web_poster.png" width="720" alt="ICAIF 2026 presentation video: Cross-Market Sentiment Propagation via Firm-Level Knowledge Graphs">
-  </a>
-  <br>
+https://github.com/user-attachments/assets/85836ff7-4892-4168-bfa5-f6c90cfd16f4
 
-https://github.com/user-attachments/assets/ebce137f-be3d-4d9b-b4eb-0eb7745bb14a
-
-
-
-https://github.com/user-attachments/assets/5e31ec9e-d8ac-4819-acba-3364b9398aef
-
-
-  <em>ICAIF 2026 presentation video (MP4, 1280×720, ~48 min, 9 MB). Click the image to download and play.</em>
-</p>
+*ICAIF 2026 presentation video (MP4, 1280×720, ~48 min).*
 
 ## Overview
 
